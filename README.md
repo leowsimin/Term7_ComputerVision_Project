@@ -11,3 +11,21 @@ This task is a complex computer vision task because the problem deals with objec
 Another challenge would be processing images in real time as we have to process frames very quickly determining the landmark positions per frame and providing real time feedback. 
 
 The following link is the blazepose research paper:  https://arxiv.org/abs/2006.10204. 
+
+## Implementation
+
+This is a third-party implementation of BlazePose in Tensorflow from [alishsuper/BlazePose-Implementation](https://github.com/alishsuper/BlazePose-Implementation?tab=readme-ov-file). 
+
+### Setup
+
+1. Install required libraries:
+    ```
+    python -m venv .venv
+    python -m pip install -r requirements.txt
+    ```
+
+2. Run `python test.py`. The keypoint predictions will be shown in the `/results` folder.
+
+### Train/finetune model
+
+In `config.py`, modify `use_existing_model_weights = 0`. Then refer to `README_OG.md`.
