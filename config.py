@@ -21,4 +21,4 @@ best_pre_train_filename = ""
 
 # for test only
 epoch_to_test = 55
-use_existing_model_weights = 1
+use_existing_model_weights = True
