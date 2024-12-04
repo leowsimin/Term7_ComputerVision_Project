@@ -5,6 +5,7 @@ import pathlib
 from model import BlazePose
 from config import epoch_to_test, eval_mode, dataset, use_existing_model_weights
 from data import data, label
+import logger
 
 def Eclidian2(a, b):
 # Calculate the square of Eclidian distance
@@ -22,12 +23,12 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 if use_existing_model_weights:
     weight_filepath = "model.weights.h5"
 else:
-    weight_filepath = os.path.join(checkpoint_path_regression, "models/model_ep{}.weights.h5".format(epoch_to_test))
+    weight_filepath = os.path.join(checkpoint_path_regression, "models/model_ep{}_val_loss_{val_loss:.2f}.weights.h5".format(epoch_to_test))
 
 model = BlazePose().call()
 model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce])
 
-print("Load regression weights", os.path.join(checkpoint_path_regression, "models/model_ep{}.weights.h5".format(epoch_to_test)))
+print("Load regression weights", weight_filepath)
 model.load_weights(weight_filepath)
 
 if dataset == "lsp":
@@ -38,10 +39,10 @@ if dataset == "lsp":
     for i in range(number_images - 200, number_images, batch_size):
         if i + batch_size >= number_images:
             # last batch
-            _, coordinates[(i - 1800):(number_images - 1800)], visibility[(i - 1800):(number_images - 1800)] = model.predict(data[i:number_images])
+            _, coordinates[(i - 1800):(number_images - 1800)], visibility[(i - 1800):(number_images - 1800)] = model.predict(data[i:number_images], callbacks=[logger.keras_custom_callback])
         else:
             # other batches
-            _, coordinates[(i - 1800):(i - 1800 + batch_size)], visibility[(i - 1800):(i - 1800 + batch_size)] = model.predict(data[i:(i + batch_size)])
+            _, coordinates[(i - 1800):(i - 1800 + batch_size)], visibility[(i - 1800):(i - 1800 + batch_size)] = model.predict(data[i:(i + batch_size)], callbacks=[logger.keras_custom_callback])
         print("=", end="")
     print(">")
 
@@ -63,8 +64,10 @@ if dataset == "lsp":
         # convert to percentage
         score_j = score_j * 0.1
         score_avg = sum(score_j) / 14
+        logger.logger.info(f'Average PCK score of images {number_images - 200} to {number_images-1} for each of the {14} keypoints = {score_j}')
         print(score_j)
         print("Average = %f%%" % score_avg)
+        logger.logger.info("Average PCK score of all keypoints = %f%%" % score_avg)
     else:
         pathlib.Path("result").mkdir(parents=True, exist_ok=True)
         # GENERATE RESULT IMAGES

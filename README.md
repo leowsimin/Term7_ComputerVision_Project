@@ -21,6 +21,7 @@ This is a third-party implementation of BlazePose in Tensorflow from [alishsuper
 1. Install required libraries:
     ```
     python -m venv .venv
+    .venv\Scripts\activate
     python -m pip install -r requirements.txt
     ```
 

@@ -3,7 +3,7 @@ import os
 import pathlib
 import tensorflow as tf
 from model import BlazePose
-from config import total_epoch, train_mode, best_pre_train, continue_train, batch_size, dataset
+from config import total_epoch, train_mode, continue_train_from_filename, batch_size, dataset, continue_train, best_pre_train_filename
 from data import coordinates, visibility, heatmap_set, data, number_images
 import logger
 
@@ -22,6 +22,15 @@ else:
     checkpoint_path = checkpoint_path_heatmap
 pathlib.Path(checkpoint_path).mkdir(parents=True, exist_ok=True)
 
+# Optimize RAM for GPU if exist
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        print(e)
+
 # Define the callbacks
 model_folder_path = os.path.join(checkpoint_path, "models")
 pathlib.Path(model_folder_path).mkdir(parents=True, exist_ok=True)
@@ -30,12 +39,12 @@ mc = tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(
 
 # continue train
 if continue_train > 0:
-    print("Load heatmap weights", os.path.join(checkpoint_path, "models/model_ep{}.weights.h5".format(continue_train)))
-    model.load_weights(os.path.join(checkpoint_path, "models/model_ep{}.weights.h5".format(continue_train)))
+    print("Load heatmap weights", os.path.join(checkpoint_path, "models/{}".format(continue_train_from_filename)))
+    model.load_weights(os.path.join(checkpoint_path, "models/{}".format(continue_train_from_filename)))
 else:
     if train_mode:
-        print("Load heatmap weights", os.path.join(checkpoint_path_heatmap, "models/model_ep{}.weights.h5".format(best_pre_train)))
-        model.load_weights(os.path.join(checkpoint_path_heatmap, "models/model_ep{}.weights.h5".format(best_pre_train)))
+        print("Load heatmap weights", os.path.join(checkpoint_path_heatmap, "models/{}".format(best_pre_train_filename)))
+        model.load_weights(os.path.join(checkpoint_path_heatmap, "models/{}".format(best_pre_train_filename)))
 
 if train_mode:
     print("Freeze these layers:")
@@ -69,10 +78,10 @@ try:
             batch_size=batch_size,
             epochs=total_epoch,
             validation_data=(x_val, y_val),
-            callbacks=mc,
+            callbacks=[mc, logger.keras_custom_callback],
             verbose=1)
 
-    model.summary()
+    model.summary(print_fn=logger.print_and_log, trinable=True)
     print("Finish training.")
 except Exception as ex:
     print(ex)
