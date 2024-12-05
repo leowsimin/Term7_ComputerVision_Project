@@ -23,11 +23,11 @@ def draw_images(model, img_idxs: list[int]):
         # solve the mid point of the hips
         cv2.line(img, tuple(gt_skeleton[12][0:2]), tuple(gt_skeleton[2][0:2] // 2 + gt_skeleton[3][0:2] // 2), color=(0, 255, 0), thickness=1)
         cv2.line(img, tuple(pred_skeleton[12][0:2]), tuple(pred_skeleton[2][0:2] // 2 + pred_skeleton[3][0:2] // 2), color=(0, 0, 255), thickness=1)
-        cv2.putText(img, 'green = ground truth', (140,190), 1, 1, color=(0,255,0), thickness=2)
-        cv2.putText(img, 'red = predicted', (140,205), 1, 1, color=(0,0,255), thickness=2)
+        cv2.putText(img, 'green = gt', (130,230), 1, 0.8, color=(0,255,0), thickness=2)
+        cv2.putText(img, 'red = predicted', (130,245), 1, 0.8, color=(0,0,255), thickness=2)
 
         pck_score = model.evaluate(data[t:t+1], [heatmap_set[t:t+1], coordinates[t:t+1], visibility[t:t+1]])[-1]
-        cv2.putText(img, f'pck score: {pck_score:.3f}', (10,10), 1, 1, color=(0,0,0), thickness=2)
+        cv2.putText(img, f'pck score: {pck_score:.3f}', (10,15), 1, 0.8, color=(0,0,0), thickness=2)
 
         filename = "./result/lsp_%d.jpg"%t
         cv2.imwrite(filename, img)
