@@ -1,7 +1,7 @@
 num_joints = 14     # lsp dataset
 
 batch_size = 200
-total_epoch = 75
+total_epoch = 100 # added more epochs to see if the model can improve - gradient have last opportunities to update as a result of the larger batch size less stable with a larger batch 
 dataset = "lsp" # "lspet"
 
 # Train mode: 0-heatmap, 1-regression
