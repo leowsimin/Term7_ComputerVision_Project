@@ -1,6 +1,6 @@
 num_joints = 14     # lsp dataset
 
-batch_size = 32
+batch_size = 200
 total_epoch = 75
 dataset = "lsp" # "lspet"
 
