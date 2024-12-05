@@ -36,21 +36,27 @@ if gpus:
     except RuntimeError as e:
         print(e)
 
-# Define the callbacks
-model_folder_path = os.path.join(checkpoint_path, "models")
-pathlib.Path(model_folder_path).mkdir(parents=True, exist_ok=True)
-mc = tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(
-    model_folder_path, "model_ep{epoch:02d}.weights.h5"), save_freq='epoch', save_weights_only=True, verbose=1)
-
 # continue train
 if continue_train > 0:
-
-    print("Load heatmap weights", os.path.join(checkpoint_path, "models/{}".format(continue_train_from_filename)))
-    model.load_weights(os.path.join(checkpoint_path, "models/{}".format(continue_train_from_filename)))
+    model_folder_path = os.path.join(checkpoint_path, "models")
+    print("Load heatmap weights", os.path.join(model_folder_path, "{}".format(continue_train_from_filename)))
+    model.load_weights(os.path.join(model_folder_path, "{}".format(continue_train_from_filename)))
 else:
     if train_mode:
         print("Load heatmap weights", os.path.join(checkpoint_path_heatmap, "models/{}".format(best_pre_train_filename)))
         model.load_weights(os.path.join(checkpoint_path_heatmap, "models/{}".format(best_pre_train_filename)))
+
+# Define the callbacks
+if continue_train_from_filename:
+    model_folder_path = os.path.join(checkpoint_path, f"models_1")
+    pathlib.Path(model_folder_path).mkdir(parents=True, exist_ok=True)
+    mc = tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(
+        model_folder_path, "model_ep{epoch:02d}.weights.h5"), save_freq='epoch', save_weights_only=True, verbose=1)
+else:
+    model_folder_path = os.path.join(checkpoint_path, "models")
+    pathlib.Path(model_folder_path).mkdir(parents=True, exist_ok=True)
+    mc = tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(
+        model_folder_path, "model_ep{epoch:02d}.weights.h5"), save_freq='epoch', save_weights_only=True, verbose=1)
 
 if train_mode:
     print("Freeze these layers:")

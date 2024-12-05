@@ -1,5 +1,5 @@
 import tensorflow as tf
-from layers import BlazeBlock
+from layers import BlazeBlock, ChannelAttention, SpatialAttention
 from config import num_joints
 
 class BlazePose():
@@ -7,6 +7,44 @@ class BlazePose():
         self.conv1 = tf.keras.layers.Conv2D(
             filters=24, kernel_size=3, strides=(2, 2), padding='same', activation='relu'
         )
+
+        self.cbam3 = tf.keras.models.Sequential([
+            # ChannelAttention(ratio=8),
+            SpatialAttention(kernel_size=3, name='spatial_attn_3')
+        ])
+        self.cbam4 = tf.keras.models.Sequential([
+            # ChannelAttention(ratio=8),
+            SpatialAttention(kernel_size=3, name='spatial_attn_4')
+        ])
+        self.cbam5 = tf.keras.models.Sequential([
+            # ChannelAttention(ratio=8),
+            SpatialAttention(kernel_size=3, name='spatial_attn_5')
+        ])
+        self.cbam6 = tf.keras.models.Sequential([
+            # ChannelAttention(ratio=8),
+            SpatialAttention(kernel_size=3, name='spatial_attn_6')
+        ])
+        
+        self.cbam7 = tf.keras.models.Sequential([
+            # ChannelAttention(ratio=8),
+            SpatialAttention(kernel_size=3, name='spatial_attn_7')
+        ])
+        
+        self.cbam8 = tf.keras.models.Sequential([
+            # ChannelAttention(ratio=8),
+            SpatialAttention(kernel_size=3, name='spatial_attn_8')
+        ])
+        
+        self.cbam9 = tf.keras.models.Sequential([
+            # ChannelAttention(ratio=8),
+            SpatialAttention(kernel_size=3)
+        ])
+        
+        self.cbam10 = tf.keras.models.Sequential([
+            # ChannelAttention(ratio=8),
+            SpatialAttention(kernel_size=3)
+        ])
+        
          
         # separable convolution (MobileNet)
         self.conv2_1 = tf.keras.models.Sequential([
@@ -111,6 +149,9 @@ class BlazePose():
 
         # shape = (1, 256, 256, 3)
         x = self.conv1(input_x)
+
+        # x = self.cbam1(x)
+
         # shape = (1, 128, 128, 24)
         x = x + self.conv2_1(x)   # <-- skip connection
         x = tf.keras.activations.relu(x)
@@ -120,17 +161,25 @@ class BlazePose():
         # ---------- heatmap branch ----------
         # shape = (1, 128, 128, 24)
         y1 = self.conv3(y0) # output res: 64
+        y1 = self.cbam3(y1) # output res: 64
         y2 = self.conv4(y1) # output res:  32
+        y2 = self.cbam4(y2) # output res:  32
         y3 = self.conv5(y2) # output res:  16
+        y3 = self.cbam5(y3) # output res:  32
         y4 = self.conv6(y3) # output res:  8
+        y4 = self.cbam6(y4) # output res:  8
         # shape = (1, 8, 8, 288)
 
         x = self.conv7a(y4) + self.conv7b(y3)
+        x = self.cbam7(x)
         x = self.conv8a(x) + self.conv8b(y2)
+        x = self.cbam8(x)
         # shape = (1, 32, 32, 96)
         x = self.conv9a(x) + self.conv9b(y1)
+        x = self.cbam9(x)
         # shape = (1, 64, 64, 48)
         y = self.conv10a(x) + self.conv10b(y0)
+        y = self.cbam10(y)
         # shape = (1, 128, 128, 8)
         heatmap = tf.keras.activations.sigmoid(self.conv11(y))
 
