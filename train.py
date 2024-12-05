@@ -37,14 +37,14 @@ else:
         print("Load heatmap weights", os.path.join(checkpoint_path_heatmap, "models/model_ep{}.weights.h5".format(best_pre_train)))
         model.load_weights(os.path.join(checkpoint_path_heatmap, "models/model_ep{}.weights.h5".format(best_pre_train)))
 
-if train_mode:
+if train_mode: # train_mode 1 is for training the heatmap branch
     print("Freeze these layers:")
     for layer in model.layers:
         if not layer.name.startswith("regression"):
             print(layer.name)
             layer.trainable = False
 # Freeze heatmap branch when training regression
-else:
+else: # train_mode = 0
     print("Freeze these layers:")
     for layer in model.layers:
         if layer.name.startswith("regression"):
@@ -65,6 +65,9 @@ try:
         x_val = data[-2000:-1000]
         y_val = [heatmap_set[-2000:-1000], coordinates[-2000:-1000], visibility[-2000:-1000]]
 
+    print(f"Number of training samples: {len(x_train)}")
+    print(f"Number of validation samples: {len(x_val)}")
+    
     model.fit(x=x_train, y=y_train,
             batch_size=batch_size,
             epochs=total_epoch,
