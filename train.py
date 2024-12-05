@@ -5,7 +5,8 @@ import tensorflow as tf
 from model import BlazePose
 from config import total_epoch, train_mode, continue_train_from_filename, batch_size, dataset, continue_train, best_pre_train_filename
 from data import coordinates, visibility, heatmap_set, data, number_images
-import logger
+import utils.logger as logger
+import utils.experiment_tracker as experiment_tracker
 
 checkpoint_path_heatmap = "checkpoints_heatmap"
 checkpoint_path_regression = "checkpoints_regression"
@@ -39,6 +40,7 @@ mc = tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(
 
 # continue train
 if continue_train > 0:
+
     print("Load heatmap weights", os.path.join(checkpoint_path, "models/{}".format(continue_train_from_filename)))
     model.load_weights(os.path.join(checkpoint_path, "models/{}".format(continue_train_from_filename)))
 else:
@@ -73,7 +75,6 @@ try:
 
         x_val = data[-2000:-1000]
         y_val = [heatmap_set[-2000:-1000], coordinates[-2000:-1000], visibility[-2000:-1000]]
-
     model.fit(x=x_train, y=y_train,
             batch_size=batch_size,
             epochs=total_epoch,
@@ -81,7 +82,9 @@ try:
             callbacks=[mc, logger.keras_custom_callback],
             verbose=1)
 
-    model.summary(print_fn=logger.print_and_log, trinable=True)
+    model.summary(print_fn=logger.print_and_log, show_trainable=True)
+    experiment_tracker.report()
+
     print("Finish training.")
 except Exception as ex:
     print(ex)

@@ -2,7 +2,8 @@
 import numpy as np
 import tensorflow as tf
 from scipy.io import loadmat
-from config import num_joints, dataset
+from config import num_joints, dataset, num_images
+import mlflow
 
 # guassian generation
 def getGaussianMap(joint = (16, 16), heat_size = 128, sigma = 2):
@@ -30,7 +31,8 @@ def getGaussianMap(joint = (16, 16), heat_size = 128, sigma = 2):
 annotations = loadmat("./dataset/" + dataset + "/joints.mat")
 if dataset == "lsp":
     # LSP
-    number_images = 2000
+    number_images = num_images or 2000
+    print('Num images:', number_images)
     label = annotations["joints"].swapaxes(0, 2)    # shape (3, 14, 2000) -> (2000, 14, 3)
 else:
     # LSPET
@@ -68,3 +70,6 @@ coordinates = label[:, :, 0:2]
 visibility = label[:, :, 2:]
 
 print("Done.")
+
+mlflow_dataset = mlflow.data.from_numpy(data, targets=label)
+mlflow.log_input(mlflow_dataset, context="training")

@@ -63,7 +63,7 @@ def print_and_log(message, line_break=True):
     message = str(message)
     message = message + "\n" if line_break else message
     try:
-        sys.stdout.write(message)
+        # sys.stdout.write(message)
         logger.info(message)
     except UnicodeEncodeError:
         # If the encoding differs from UTF-8, `sys.stdout.write` may fail.

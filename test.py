@@ -5,7 +5,7 @@ import pathlib
 from model import BlazePose
 from config import epoch_to_test, eval_mode, dataset, use_existing_model_weights
 from data import data, label
-import logger
+import utils.logger as logger
 
 def Eclidian2(a, b):
 # Calculate the square of Eclidian distance

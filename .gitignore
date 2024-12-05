@@ -137,3 +137,5 @@ dataset/lspet/
 *.json
 
 logs/
+mlruns/
+mlartifacts/
