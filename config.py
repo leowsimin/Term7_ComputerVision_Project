@@ -1,9 +1,10 @@
 num_joints = 14     # lsp dataset
 num_images = 2000 # above 400, below 2000
 
-batch_size = 16
-total_epoch = 3
+batch_size = 32
+total_epoch = 1
 dataset = "lsp" # "lspet"
+train_split, val_split, test_split = 0.6, 0.2, 0.2 # split
 
 # Train mode: 0-heatmap, 1-regression
 train_mode = 0
@@ -11,6 +12,7 @@ train_mode = 0
 # Eval mode: 0-output image, 1-pck score
 eval_mode = 1
 pck_metric = 0.5 # standard; point is correct if distance to gt < 50% of person's head size
+img_idxs=[1800, 1906, 1981, 1995] # which images to draw when predicting
 
 continue_train = 0
 continue_train_from_filename = "model_ep49_val_loss_785.84.weights.h5"

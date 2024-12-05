@@ -139,3 +139,4 @@ dataset/lspet/
 logs/
 mlruns/
 mlartifacts/
+tmp/

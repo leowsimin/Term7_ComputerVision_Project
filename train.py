@@ -3,11 +3,13 @@ import os
 import pathlib
 import tensorflow as tf
 from model import BlazePose
-from config import total_epoch, train_mode, continue_train_from_filename, batch_size, dataset, continue_train, best_pre_train_filename
-from data import coordinates, visibility, heatmap_set, data, number_images
+from config import total_epoch, train_mode, continue_train_from_filename, batch_size, dataset, continue_train, best_pre_train_filename, img_idxs
+from data import x_train, y_train, x_val, y_val, x_test, y_test
 from utils import metrics
+from utils.draw import draw_images
 import utils.logger as logger
 import utils.experiment_tracker as experiment_tracker
+import mlflow
 
 checkpoint_path_heatmap = "checkpoints_heatmap"
 checkpoint_path_regression = "checkpoints_regression"
@@ -65,27 +67,27 @@ else:
             layer.trainable = False
 
 try:
-    if dataset == "lsp":
-        x_train = data[:(number_images - 400)]
-        y_train = [heatmap_set[:(number_images - 400)], coordinates[:(number_images - 400)], visibility[:(number_images - 400)]]
-
-        x_val = data[-400:-200]
-        y_val = [heatmap_set[-400:-200], coordinates[-400:-200], visibility[-400:-200]]
-    else:
-        x_train = data[:(number_images - 2000)]
-        y_train = [heatmap_set[:(number_images - 2000)], coordinates[:(number_images - 2000)], visibility[:(number_images - 2000)]]
-
-        x_val = data[-2000:-1000]
-        y_val = [heatmap_set[-2000:-1000], coordinates[-2000:-1000], visibility[-2000:-1000]]
     model.fit(x=x_train, y=y_train,
             batch_size=batch_size,
             epochs=total_epoch,
             validation_data=(x_val, y_val),
             callbacks=[mc, logger.keras_custom_callback],
             verbose=1)
+    
+    res = model.evaluate(x=x_test, 
+                   y=y_test, 
+                   batch_size=batch_size, 
+                   callbacks=[logger.keras_custom_callback])
+    print("Test PCK score:", res[-1])
+    mlflow.log_metrics({"test_coordinates_pck": res[-1]})
 
-    model.summary(print_fn=logger.print_and_log, show_trainable=True)
-    experiment_tracker.report()
+    # model.summary(print_fn=logger.print_and_log, show_trainable=True)
+    tf.keras.utils.plot_model(model, to_file='/tmp/model_architecture.png', show_shapes=True, show_layer_activations=True, show_trainable=True)
+    mlflow.log_artifact('/tmp/model_architecture.png')
+
+    image_files = draw_images(model, img_idxs=img_idxs)
+    for image_file in image_files:
+        mlflow.log_artifact(image_file)
 
     print("Finish training.")
 except Exception as ex:

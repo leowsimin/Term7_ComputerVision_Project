@@ -21,8 +21,6 @@ for k, v in vars(config).items():
         mlflow.set_tag(str(k), str(v))
 
 mlflow_client = mlflow.MlflowClient()
-def report(model=None):
-    pass # report test result here later on
 
 # run the following lines to stop mlflow server
 # mlflow_process.terminate()  # Gracefully stop the server

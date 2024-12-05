@@ -2,7 +2,7 @@
 import numpy as np
 import tensorflow as tf
 from scipy.io import loadmat
-from config import num_joints, dataset, num_images
+from config import num_joints, dataset, num_images, train_split, val_split, test_split
 import mlflow
 
 # guassian generation
@@ -73,5 +73,21 @@ visibility = label[:, :, 2:]
 
 print("Done.")
 
-mlflow_dataset = mlflow.data.from_numpy(data, targets=label)
+print("Splitting data.")
+train_start, train_end = 0, int(train_split * number_images)
+val_start, val_end = int(train_split * number_images), int((train_split + val_split) * number_images)
+test_start, test_end = int((train_split + val_split) * number_images), number_images
+
+x_train = data[train_start:train_end]
+y_train = [heatmap_set[train_start:train_end], coordinates[train_start:train_end], visibility[train_start:train_end]]
+x_val = data[val_start:val_end]
+y_val = [heatmap_set[val_start:val_end], coordinates[val_start:val_end], visibility[val_start:val_end]]
+x_test = data[test_start:test_end]
+y_test = [heatmap_set[test_start:test_end], coordinates[test_start:test_end], visibility[test_start:test_end]]
+
+mlflow_dataset = mlflow.data.from_numpy(x_train, targets=y_train[1]) # log coord target only
 mlflow.log_input(mlflow_dataset, context="training")
+mlflow_dataset = mlflow.data.from_numpy(x_val, targets=y_val[1])
+mlflow.log_input(mlflow_dataset, context="validation")
+mlflow_dataset = mlflow.data.from_numpy(x_test, targets=y_test[1])
+mlflow.log_input(mlflow_dataset, context="test")
