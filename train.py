@@ -1,4 +1,3 @@
-#!~/miniconda3/envs/tf2/bin/python
 import os
 import pathlib
 import tensorflow as tf
@@ -25,26 +24,50 @@ pathlib.Path(checkpoint_path).mkdir(parents=True, exist_ok=True)
 # Define the callbacks
 model_folder_path = os.path.join(checkpoint_path, "models")
 pathlib.Path(model_folder_path).mkdir(parents=True, exist_ok=True)
+
+# Callback to save the best checkpoint
+class SaveBestCheckpoint(tf.keras.callbacks.Callback):
+    def __init__(self, folder_path):
+        super(SaveBestCheckpoint, self).__init__()
+        self.folder_path = folder_path
+        self.best_loss = float("inf")
+        self.best_checkpoint = None
+
+    def on_epoch_end(self, epoch, logs=None):
+        val_loss = logs.get("val_loss")
+        if val_loss is not None and val_loss < self.best_loss:
+            self.best_loss = val_loss
+            self.best_checkpoint = os.path.join(self.folder_path, f"model_ep{epoch + 1:02d}.weights.h5")
+            logger.tf_logger.info(f"New best checkpoint: {self.best_checkpoint} with validation loss: {self.best_loss}")
+
+# Instantiate the callback
+best_checkpoint_callback = SaveBestCheckpoint(model_folder_path)
+
 mc = tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(
-    model_folder_path, "model_ep{epoch:02d}.weights.h5"), save_freq='epoch', save_weights_only=True, verbose=1)
+    model_folder_path, "model_ep{epoch:02d}.weights.h5"),
+    save_freq='epoch',
+    save_weights_only=True,
+    verbose=1)
 
-# continue train
+# Load the best checkpoint if continuing training
 if continue_train > 0:
-    print("Load heatmap weights", os.path.join(checkpoint_path, "models/model_ep{}.weights.h5".format(continue_train)))
-    model.load_weights(os.path.join(checkpoint_path, "models/model_ep{}.weights.h5".format(continue_train)))
+    checkpoint_file = os.path.join(checkpoint_path, f"models/model_ep{continue_train:02d}.weights.h5")
+    print(f"Load heatmap weights: {checkpoint_file}")
+    model.load_weights(checkpoint_file)
 else:
-    if train_mode:
-        print("Load heatmap weights", os.path.join(checkpoint_path_heatmap, "models/model_ep{}.weights.h5".format(best_pre_train)))
-        model.load_weights(os.path.join(checkpoint_path_heatmap, "models/model_ep{}.weights.h5".format(best_pre_train)))
+    if train_mode and best_pre_train:
+        checkpoint_file = os.path.join(checkpoint_path_heatmap, f"models/model_ep{best_pre_train:02d}.weights.h5")
+        print(f"Load heatmap weights: {checkpoint_file}")
+        model.load_weights(checkpoint_file)
 
-if train_mode: # train_mode 1 is for training the heatmap branch
+# Freeze layers based on training mode
+if train_mode:  # train_mode 1 is for training the heatmap branch
     print("Freeze these layers:")
     for layer in model.layers:
         if not layer.name.startswith("regression"):
             print(layer.name)
             layer.trainable = False
-# Freeze heatmap branch when training regression
-else: # train_mode = 0
+else:  # train_mode = 0
     print("Freeze these layers:")
     for layer in model.layers:
         if layer.name.startswith("regression"):
@@ -69,13 +92,14 @@ try:
     print(f"Number of validation samples: {len(x_val)}")
     
     model.fit(x=x_train, y=y_train,
-            batch_size=batch_size,
-            epochs=total_epoch,
-            validation_data=(x_val, y_val),
-            callbacks=mc,
-            verbose=1)
+              batch_size=batch_size,
+              epochs=total_epoch,
+              validation_data=(x_val, y_val),
+              callbacks=[mc, best_checkpoint_callback],
+              verbose=1)
 
     model.summary()
     print("Finish training.")
 except Exception as ex:
+    logger.tf_logger.error(f"Exception occurred: {ex}")
     print(ex)
