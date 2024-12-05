@@ -50,7 +50,13 @@ class LogCallback(tf.keras.callbacks.Callback):
         logger.info("Start predicting; got log: {}".format(logs))
 
     def on_predict_end(self, logs=None):
-        logger.info("Stop predicting; got log: {}".format(logs))
+        logger.info("Stop predicting; got log: {}".format(logs))    
+        
+    def on_test_begin(self, logs=None):
+        logger.info("Start testing; got log: {}".format(logs))
+
+    def on_test_end(self, logs=None):
+        logger.info("Stop testing; got log: {}".format(logs))
 
 keras_custom_callback = LogCallback()
 

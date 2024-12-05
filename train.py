@@ -5,6 +5,7 @@ import tensorflow as tf
 from model import BlazePose
 from config import total_epoch, train_mode, continue_train_from_filename, batch_size, dataset, continue_train, best_pre_train_filename
 from data import coordinates, visibility, heatmap_set, data, number_images
+from utils import metrics
 import utils.logger as logger
 import utils.experiment_tracker as experiment_tracker
 
@@ -15,7 +16,8 @@ loss_func_bce = tf.keras.losses.BinaryCrossentropy()
 
 model = BlazePose().call()
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce])
+model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], 
+            metrics=[None, metrics.PCKMetric(), None])
 
 if train_mode:
     checkpoint_path = checkpoint_path_regression

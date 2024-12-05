@@ -29,16 +29,18 @@ def getGaussianMap(joint = (16, 16), heat_size = 128, sigma = 2):
 
 # read annotations
 annotations = loadmat("./dataset/" + dataset + "/joints.mat")
+number_images = num_images
 if dataset == "lsp":
     # LSP
-    number_images = num_images or 2000
+    number_images = number_images or 2000
     print('Num images:', number_images)
     label = annotations["joints"].swapaxes(0, 2)    # shape (3, 14, 2000) -> (2000, 14, 3)
 else:
     # LSPET
-    number_images = 10000
+    number_images = number_images or 10000
     label = annotations["joints"].swapaxes(0, 1)    # shape (14, 3, 10000) -> (3, 14, 10000)
     label = label.swapaxes(0, 2)                    # shape (3, 14, 10000) -> (10000, 14, 3)
+label = label[:number_images, :, :]
 
 # read images
 data = np.zeros([number_images, 256, 256, 3])
