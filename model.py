@@ -3,57 +3,58 @@ from layers import BlazeBlock, ChannelAttention, SpatialAttention
 from config import num_joints
 
 class BlazePose():
-    def __init__(self):
+    def __init__(self, l2_reg=1e-4):
         self.conv1 = tf.keras.layers.Conv2D(
-            filters=24, kernel_size=3, strides=(2, 2), padding='same', activation='relu'
+            filters=24, kernel_size=3, strides=(2, 2), padding='same', activation='relu',
+            kernel_regularizer=tf.keras.regularizers.L2(l2_reg)
         )
 
-        self.cbam3 = tf.keras.models.Sequential([
-            # ChannelAttention(ratio=8),
-            SpatialAttention(kernel_size=3, name='spatial_attn_3')
-        ])
-        self.cbam4 = tf.keras.models.Sequential([
-            # ChannelAttention(ratio=8),
-            SpatialAttention(kernel_size=3, name='spatial_attn_4')
-        ])
-        self.cbam5 = tf.keras.models.Sequential([
-            # ChannelAttention(ratio=8),
-            SpatialAttention(kernel_size=3, name='spatial_attn_5')
-        ])
-        self.cbam6 = tf.keras.models.Sequential([
-            # ChannelAttention(ratio=8),
-            SpatialAttention(kernel_size=3, name='spatial_attn_6')
-        ])
+        # self.cbam3 = tf.keras.models.Sequential([
+        #     # ChannelAttention(ratio=8),
+        #     SpatialAttention(kernel_size=3, name='spatial_attn_3')
+        # ])
+        # self.cbam4 = tf.keras.models.Sequential([
+        #     # ChannelAttention(ratio=8),
+        #     SpatialAttention(kernel_size=3, name='spatial_attn_4')
+        # ])
+        # self.cbam5 = tf.keras.models.Sequential([
+        #     # ChannelAttention(ratio=8),
+        #     SpatialAttention(kernel_size=3, name='spatial_attn_5')
+        # ])
+        # self.cbam6 = tf.keras.models.Sequential([
+        #     # ChannelAttention(ratio=8),
+        #     SpatialAttention(kernel_size=3, name='spatial_attn_6')
+        # ])
         
-        self.cbam7 = tf.keras.models.Sequential([
-            # ChannelAttention(ratio=8),
-            SpatialAttention(kernel_size=3, name='spatial_attn_7')
-        ])
+        # self.cbam7 = tf.keras.models.Sequential([
+        #     # ChannelAttention(ratio=8),
+        #     SpatialAttention(kernel_size=3, name='spatial_attn_7')
+        # ])
         
-        self.cbam8 = tf.keras.models.Sequential([
-            # ChannelAttention(ratio=8),
-            SpatialAttention(kernel_size=3, name='spatial_attn_8')
-        ])
+        # self.cbam8 = tf.keras.models.Sequential([
+        #     # ChannelAttention(ratio=8),
+        #     SpatialAttention(kernel_size=3, name='spatial_attn_8')
+        # ])
         
-        self.cbam9 = tf.keras.models.Sequential([
-            # ChannelAttention(ratio=8),
-            SpatialAttention(kernel_size=3)
-        ])
+        # self.cbam9 = tf.keras.models.Sequential([
+        #     # ChannelAttention(ratio=8),
+        #     SpatialAttention(kernel_size=3)
+        # ])
         
-        self.cbam10 = tf.keras.models.Sequential([
-            # ChannelAttention(ratio=8),
-            SpatialAttention(kernel_size=3)
-        ])
+        # self.cbam10 = tf.keras.models.Sequential([
+        #     # ChannelAttention(ratio=8),
+        #     SpatialAttention(kernel_size=3)
+        # ])
         
          
         # separable convolution (MobileNet)
         self.conv2_1 = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None),
-            tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None)
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None,   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
         self.conv2_2 = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None),
-            tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None)
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None,   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
         #  ---------- Heatmap branch ----------
@@ -63,63 +64,64 @@ class BlazePose():
         self.conv6 = BlazeBlock(block_num = 6, channel = 288)   # input res: 16
 
         self.conv7a = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None),
-            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu"),
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.UpSampling2D(size=(2, 2), interpolation="bilinear")
         ])
         self.conv7b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None),
-            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu")
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
         self.conv8a = tf.keras.layers.UpSampling2D(size=(2, 2), interpolation="bilinear")
         self.conv8b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None),
-            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu")
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
         self.conv9a = tf.keras.layers.UpSampling2D(size=(2, 2), interpolation="bilinear")
         self.conv9b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None),
-            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu")
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
         self.conv10a = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None),
-            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu"),
-            tf.keras.layers.UpSampling2D(size=(2, 2), interpolation="bilinear")
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.UpSampling2D(size=(2, 2), interpolation="bilinear"
+            )
         ])
         self.conv10b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None),
-            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu")
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
         # the output layer for heatmap and offset
         self.conv11 = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None),
-            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu"),
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
             # heatmap
-            tf.keras.layers.Conv2D(filters=num_joints, kernel_size=3, padding="same", activation=None)
+            tf.keras.layers.Conv2D(filters=num_joints, kernel_size=3, padding="same", activation=None,   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
         # ---------- Regression branch ----------
         #  shape = (1, 64, 64, 48)
         self.conv12a = BlazeBlock(block_num = 4, channel = 96, name_prefix="regression_conv12a_")    # input res: 64
         self.conv12b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, name="regression_conv12b_depthwise"),
-            tf.keras.layers.Conv2D(filters=96, kernel_size=1, activation="relu", name="regression_conv12b_conv1x1")
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, name="regression_conv12b_depthwise",   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=96, kernel_size=1, activation="relu", name="regression_conv12b_conv1x1",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ], name="regression_conv12b")
 
         self.conv13a = BlazeBlock(block_num = 5, channel = 192, name_prefix="regression_conv13a_")   # input res: 32
         self.conv13b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, name="regression_conv13b_depthwise"),
-            tf.keras.layers.Conv2D(filters=192, kernel_size=1, activation="relu", name="regression_conv13b_conv1x1")
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, name="regression_conv13b_depthwise",   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=192, kernel_size=1, activation="relu", name="regression_conv13b_conv1x1",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ], name="regression_conv13b")
 
         self.conv14a = BlazeBlock(block_num = 6, channel = 288, name_prefix="regression_conv14a_")   # input res: 16
         self.conv14b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, name="regression_conv14b_depthwise"),
-            tf.keras.layers.Conv2D(filters=288, kernel_size=1, activation="relu", name="regression_conv14b_conv1x1")
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, name="regression_conv14b_depthwise",   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=288, kernel_size=1, activation="relu", name="regression_conv14b_conv1x1",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ], name="regression_conv14b")
 
         self.conv15 = tf.keras.models.Sequential([
@@ -132,7 +134,7 @@ class BlazePose():
             tf.keras.layers.GlobalAveragePooling2D(),
             # shape = (1, 1, 1, 288)
             # coordinates
-            tf.keras.layers.Dense(units=2*num_joints, activation=None, name="regression_final_dense_1"),
+            tf.keras.layers.Dense(units=2*num_joints, activation=None, name="regression_final_dense_1",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Reshape((num_joints, 2))
         ], name="coordinates")
 
@@ -140,7 +142,7 @@ class BlazePose():
             tf.keras.layers.GlobalAveragePooling2D(),
             # shape = (1, 1, 1, 288)
             # visibility
-            tf.keras.layers.Dense(units=num_joints, activation="sigmoid", name="regression_final_dense_2"),
+            tf.keras.layers.Dense(units=num_joints, activation="sigmoid", name="regression_final_dense_2",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Reshape((num_joints, 1))
         ], name="visibility")
 
@@ -161,25 +163,25 @@ class BlazePose():
         # ---------- heatmap branch ----------
         # shape = (1, 128, 128, 24)
         y1 = self.conv3(y0) # output res: 64
-        y1 = self.cbam3(y1) # output res: 64
+        # y1 = self.cbam3(y1) # output res: 64
         y2 = self.conv4(y1) # output res:  32
-        y2 = self.cbam4(y2) # output res:  32
+        # y2 = self.cbam4(y2) # output res:  32
         y3 = self.conv5(y2) # output res:  16
-        y3 = self.cbam5(y3) # output res:  32
+        # y3 = self.cbam5(y3) # output res:  32
         y4 = self.conv6(y3) # output res:  8
-        y4 = self.cbam6(y4) # output res:  8
+        # y4 = self.cbam6(y4) # output res:  8
         # shape = (1, 8, 8, 288)
 
         x = self.conv7a(y4) + self.conv7b(y3)
-        x = self.cbam7(x)
+        #x = self.cbam7(x)
         x = self.conv8a(x) + self.conv8b(y2)
-        x = self.cbam8(x)
+        #x = self.cbam8(x)
         # shape = (1, 32, 32, 96)
         x = self.conv9a(x) + self.conv9b(y1)
-        x = self.cbam9(x)
+        #x = self.cbam9(x)
         # shape = (1, 64, 64, 48)
-        y = self.conv10a(x) + self.conv10b(y0)
-        y = self.cbam10(y)
+        y = x #self.conv10a(x) + self.conv10b(y0)
+        #y = self.cbam10(y)
         # shape = (1, 128, 128, 8)
         heatmap = tf.keras.activations.sigmoid(self.conv11(y))
 

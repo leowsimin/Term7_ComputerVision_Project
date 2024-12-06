@@ -7,7 +7,8 @@ def draw_images(model, img_idxs: list[int]):
     # GENERATE RESULT IMAGES
     filenames = []
     for t in img_idxs:
-        _, preds, _ = model.predict(data[t:t+1])
+        heatmap, preds, _ = model.predict(data[t:t+1])
+        print(heatmap.shape)
         gt_skeleton = coordinates[t].astype(np.uint8)
         pred_skeleton = preds[0].astype(np.uint8)
         assert gt_skeleton.shape == pred_skeleton.shape

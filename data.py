@@ -2,7 +2,7 @@
 import numpy as np
 import tensorflow as tf
 from scipy.io import loadmat
-from config import num_joints, dataset, num_images, train_split, val_split, test_split
+from config import num_joints, dataset, num_images, train_split, val_split, test_split, heat_size
 import mlflow
 
 # guassian generation
@@ -44,7 +44,7 @@ label = label[:number_images, :, :]
 
 # read images
 data = np.zeros([number_images, 256, 256, 3])
-heatmap_set = np.zeros((number_images, 128, 128, num_joints), dtype=np.float32)
+heatmap_set = np.zeros((number_images, heat_size, heat_size, num_joints), dtype=np.float32)
 print("Reading dataset...")
 for i in range(number_images):
     if dataset == "lsp":
@@ -62,8 +62,8 @@ for i in range(number_images):
     data[i] = tf.image.resize(img, [256, 256])
     # generate heatmap set
     for j in range(num_joints):
-        _joint = (label[i, j, 0:2] // 2).astype(np.uint16)
-        heatmap_set[i, :, :, j] = getGaussianMap(joint = _joint, heat_size = 128, sigma = 4)
+        _joint = (label[i, j, 0:2] // (256 / heat_size)).astype(np.uint16)
+        heatmap_set[i, :, :, j] = getGaussianMap(joint = _joint, heat_size = heat_size, sigma = 4)
     # print status
     if not i % (number_images // 80):
         print(">", end='')
@@ -85,9 +85,12 @@ y_val = [heatmap_set[val_start:val_end], coordinates[val_start:val_end], visibil
 x_test = data[test_start:test_end]
 y_test = [heatmap_set[test_start:test_end], coordinates[test_start:test_end], visibility[test_start:test_end]]
 
-mlflow_dataset = mlflow.data.from_numpy(x_train, targets=y_train[1]) # log coord target only
-mlflow.log_input(mlflow_dataset, context="training")
-mlflow_dataset = mlflow.data.from_numpy(x_val, targets=y_val[1])
-mlflow.log_input(mlflow_dataset, context="validation")
-mlflow_dataset = mlflow.data.from_numpy(x_test, targets=y_test[1])
-mlflow.log_input(mlflow_dataset, context="test")
+try:
+    mlflow_dataset = mlflow.data.from_numpy(x_train, targets=y_train[1]) # log coord target only
+    mlflow.log_input(mlflow_dataset, context="training")
+    mlflow_dataset = mlflow.data.from_numpy(x_val, targets=y_val[1])
+    mlflow.log_input(mlflow_dataset, context="validation")
+    mlflow_dataset = mlflow.data.from_numpy(x_test, targets=y_test[1])
+    mlflow.log_input(mlflow_dataset, context="test")
+except:
+    pass

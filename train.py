@@ -78,6 +78,7 @@ try:
             epochs=total_epoch,
             validation_data=(x_val, y_val),
             callbacks=[mc, logger.keras_custom_callback],
+            shuffle=True,
             verbose=1)
     
     res = model.evaluate(x=x_test, 
@@ -94,6 +95,11 @@ try:
     image_files = draw_images(model, img_idxs=img_idxs)
     for image_file in image_files:
         mlflow.log_artifact(image_file)
+
+    if train_mode > 0: # if regression mode -> model prbl quite good -> save model weights
+        model_folder_path = os.path.join(checkpoint_path, "models")
+        newest_weight_file = os.path.join(model_folder_path, f"model_ep{total_epoch:02d}.weights.h5")
+        mlflow.log_artifact(newest_weight_file)
 
     print("Finish training.")
 except Exception as ex:
