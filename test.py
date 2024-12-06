@@ -47,11 +47,12 @@ mlflow.log_metrics({"test_coordinates_pck": res[-1]})
 
 image_files = draw_images(model, img_idxs=img_idxs)
 for image_file in image_files:
-    mlflow.log_artifact(image_file)  
-
+    mlflow.log_artifact(image_file)    
+    
+    
 image_files = draw_heatmaps(model, img_idxs=img_idxs)
 for image_file in image_files:
-    mlflow.log_artifact(image_file)                            
+    mlflow.log_artifact(image_file)                          
 
 # if dataset == "lsp":
 #     coordinates = np.zeros((200, 14, 2)).astype(np.uint8)

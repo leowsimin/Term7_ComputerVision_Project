@@ -130,6 +130,9 @@ class BlazePose():
         x = self.conv1(input_x)
         # shape x = (1, 128, 128, 24)
         
+        # print("x shape: ", x.shape)
+        # print("conv2_1 shape: ", self.conv2_1(x).shape)
+        # print("conv2_2 shape: ", self.conv2_2(x).shape)
         x = x + self.conv2_1(x)   # <-- skip connection
         x = tf.keras.activations.relu(x)
         x = x + self.conv2_2(x)
