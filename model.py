@@ -3,7 +3,7 @@ from layers import BlazeBlock, ChannelAttention, SpatialAttention
 from config import num_joints
 
 class BlazePose():
-    def __init__(self, l2_reg=1e-4, dropout_rate=0.1):  # NOTE: modification - added dropout_rate as a parameter, increased l2_reg from 0 to 1e-4
+    def __init__(self, l2_reg=1e-4, dropout_rate=0):  # NOTE: modification - added dropout_rate as a parameter, increased l2_reg from 0 to 1e-4
         self.conv1 = tf.keras.Sequential([
             tf.keras.layers.Conv2D(
                 filters=24, kernel_size=3, strides=(2, 2), padding='same', activation='relu',
