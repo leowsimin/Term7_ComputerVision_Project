@@ -9,6 +9,8 @@ from utils import metrics
 from utils.draw import draw_heatmaps, draw_images
 import utils.logger as logger
 
+
+
 def freeze_model_layers(model, train_mode):
     """
     Recursively freeze layers based on train_mode.
@@ -43,7 +45,15 @@ loss_func_bce = tf.keras.losses.BinaryCrossentropy()
 
 model_instance = BlazePose()
 model = model_instance.call()
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001) # NOTE: inceased lr
+
+lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+    initial_learning_rate=0.0001,
+    decay_steps=1000,
+    decay_rate=0.96,
+    staircase=True
+)
+
+optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule) # NOTE: added schedule to warm up the learning rate
 model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], 
               metrics=[None, metrics.PCKMetric(), None])
 
