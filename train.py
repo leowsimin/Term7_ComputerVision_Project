@@ -43,7 +43,7 @@ loss_func_bce = tf.keras.losses.BinaryCrossentropy()
 
 model_instance = BlazePose()
 model = model_instance.call()
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.01) # NOTE: inceased lr
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001) # NOTE: inceased lr
 model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], 
               metrics=[None, metrics.PCKMetric(), None])
 
