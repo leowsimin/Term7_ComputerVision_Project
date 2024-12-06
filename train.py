@@ -9,15 +9,43 @@ from utils import metrics
 from utils.draw import draw_heatmaps, draw_images
 import utils.logger as logger
 
+def freeze_model_layers(model, train_mode):
+    """
+    Recursively freeze layers based on train_mode.
+    If train_mode == 0 (heatmap training), freeze all regression layers.
+    If train_mode == 1 (regression training), freeze all non-regression layers.
+    """
+    print(f"Training mode: {train_mode}, Freezing layers:")
+    
+    def recursively_freeze(layer, freeze_condition):
+        if freeze_condition(layer):
+            layer.trainable = False
+            print(f"Froze layer: {layer.name}")
+        if hasattr(layer, 'layers'):  # Check if the layer has sub-layers (e.g., Sequential, BlazeBlock)
+            for sub_layer in layer.layers:
+                recursively_freeze(sub_layer, freeze_condition)
+
+    # Define the condition for freezing layers
+    if train_mode == 0:  # Heatmap training
+        freeze_condition = lambda layer: "regression" in layer.name
+    else:  # Regression training
+        freeze_condition = lambda layer: "regression" not in layer.name
+
+    # Apply recursive freezing
+    for layer in model.layers:
+        recursively_freeze(layer, freeze_condition)
+
+
 checkpoint_path_heatmap = "checkpoints_heatmap"
 checkpoint_path_regression = "checkpoints_regression"
 loss_func_mse = tf.keras.losses.MeanSquaredError()
 loss_func_bce = tf.keras.losses.BinaryCrossentropy()
 
-model = BlazePose().call()
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+model_instance = BlazePose()
+model = model_instance.call()
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.01) # NOTE: inceased lr
 model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], 
-            metrics=[None, metrics.PCKMetric(), None])
+              metrics=[None, metrics.PCKMetric(), None])
 
 if train_mode:
     checkpoint_path = checkpoint_path_regression
@@ -37,11 +65,11 @@ if gpus:
 # Continue training
 if continue_train > 0:
     model_folder_path = os.path.join(checkpoint_path, "models")
-    print("Load heatmap weights", os.path.join(model_folder_path, "{}".format(continue_train_from_filename)))
+    print("Load weights", os.path.join(model_folder_path, "{}".format(continue_train_from_filename)))
     model.load_weights(os.path.join(model_folder_path, "{}".format(continue_train_from_filename)))
 else:
     if train_mode:
-        print("Load heatmap weights", os.path.join(checkpoint_path_heatmap, "models/{}".format(best_pre_train_filename)))
+        print("Load weights", os.path.join(checkpoint_path_heatmap, "models/{}".format(best_pre_train_filename)))
         model.load_weights(os.path.join(checkpoint_path_heatmap, "models/{}".format(best_pre_train_filename)))
 
 # Define the callbacks
@@ -75,18 +103,7 @@ class LogBestLossCallback(tf.keras.callbacks.Callback):
 log_best_loss_cb = LogBestLossCallback()
 
 # Freeze layers based on the training mode
-if train_mode:
-    print("Freeze these layers:")
-    for layer in model.layers:
-        if not layer.name.startswith("regression"):
-            print(layer.name)
-            layer.trainable = False
-else:
-    print("Freeze these layers:")
-    for layer in model.layers:
-        if layer.name.startswith("regression"):
-            print(layer.name)
-            layer.trainable = False
+freeze_model_layers(model, train_mode)
 
 try:
     # Train the model with callbacks

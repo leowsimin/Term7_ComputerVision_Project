@@ -3,33 +3,54 @@ from tensorflow.python.keras.layers import GlobalAveragePooling2D, GlobalMaxPool
 from tensorflow.python.keras import backend as K
 
 
+# NOTE: ryan: had to modify this quite a bit to add the l2 regularization - l2_reg is now a parameter, and they are added to the depthwise convolution and standard convolutional layers
+
 class BlazeBlock(tf.keras.Model):
-    def __init__(self, block_num = 3, channel = 48, channel_padding = 1, name_prefix=""):
+    def __init__(self, block_num=3, channel=48, channel_padding=1, name_prefix="", l2_reg=1e-4):
         super(BlazeBlock, self).__init__()
-        # <----- downsample ----->
         self.downsample_a = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, strides=(2, 2), padding='same', activation=None, name=name_prefix + "downsample_a_depthwise"),
-            tf.keras.layers.Conv2D(filters=channel, kernel_size=1, activation=None, name=name_prefix + "downsample_a_conv1x1")
-        ])
+            tf.keras.layers.DepthwiseConv2D(
+                kernel_size=3, strides=(2, 2), padding='same', activation=None,
+                depthwise_regularizer=tf.keras.regularizers.L2(l2_reg),
+                name=name_prefix + "downsample_a_depthwise"
+            ),
+            tf.keras.layers.Conv2D(
+                filters=channel, kernel_size=1, activation=None,
+                kernel_regularizer=tf.keras.regularizers.L2(l2_reg),
+                name=name_prefix + "downsample_a_conv1x1"
+            )
+        ], name=name_prefix + "downsample_a")  # Explicit Sequential naming
         if channel_padding:
             self.downsample_b = tf.keras.models.Sequential([
-                tf.keras.layers.MaxPool2D(pool_size=(2, 2)),
-                tf.keras.layers.Conv2D(filters=channel, kernel_size=1, activation=None)
-            ])
+                tf.keras.layers.MaxPool2D(pool_size=(2, 2), name=name_prefix + "downsample_b_maxpool"),
+                tf.keras.layers.Conv2D(
+                    filters=channel, kernel_size=1, activation=None,
+                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg),
+                    name=name_prefix + "downsample_b_conv1x1"
+                )
+            ], name=name_prefix + "downsample_b")
         else:
-            self.downsample_b = tf.keras.layers.MaxPool2D(pool_size=(2, 2))
+            self.downsample_b = tf.keras.layers.MaxPool2D(pool_size=(2, 2), name=name_prefix + "downsample_b_maxpool")
 
-        self.conv = list()
+        self.conv = []
         for i in range(block_num):
             self.conv.append(tf.keras.models.Sequential([
-                tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None, name=name_prefix + "conv_block_{}".format(i+1)),
-                tf.keras.layers.Conv2D(filters=channel, kernel_size=1, activation=None)
-            ]))
+                tf.keras.layers.DepthwiseConv2D(
+                    kernel_size=3, padding='same', activation=None,
+                    depthwise_regularizer=tf.keras.regularizers.L2(l2_reg),
+                    name=name_prefix + f"conv_block_{i+1}_depthwise"
+                ),
+                tf.keras.layers.Conv2D(
+                    filters=channel, kernel_size=1, activation=None,
+                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg),
+                    name=name_prefix + f"conv_block_{i+1}_conv1x1"
+                )
+            ], name=name_prefix + f"conv_block_{i+1}"))
 
     def call(self, x):
         x = tf.keras.activations.relu(self.downsample_a(x) + self.downsample_b(x))
-        for i in range(len(self.conv)):
-            x = tf.keras.activations.relu(x + self.conv[i](x))
+        for conv_block in self.conv:
+            x = tf.keras.activations.relu(x + conv_block(x))
         return x
 
 

@@ -63,8 +63,7 @@ class BlazePose():
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
         ])
-
-        # Remaining heatmap layers
+        
         self.conv9a = tf.keras.models.Sequential([
             tf.keras.layers.Conv2DTranspose(filters=48, kernel_size=2, strides=2, padding="same", activation="relu", 
                                              kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
@@ -94,8 +93,7 @@ class BlazePose():
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
         ])
-
-        # Final heatmap layer
+        
         self.conv11 = tf.keras.models.Sequential([
             tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, 
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
@@ -108,7 +106,7 @@ class BlazePose():
         # ---------- Regression branch ----------
         # NOTE: modification - Added dropout to the regression branch
 
-        self.convMODIFICATIONa = BlazeBlock(block_num=3, channel=48, name_prefix="regression_convMOD_", l2_reg=l2_reg)
+        self.convMODIFICATIONa = BlazeBlock(block_num=3, channel=48, name_prefix="regression_convMODa_", l2_reg=l2_reg)
 
         self.convMODIFICATIONb = tf.keras.models.Sequential([
             tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, 
@@ -119,6 +117,7 @@ class BlazePose():
         ])
 
         self.conv12a = BlazeBlock(block_num=4, channel=96, name_prefix="regression_conv12a_", l2_reg=l2_reg)
+        
         self.conv12b = tf.keras.models.Sequential([
             tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, 
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
@@ -128,6 +127,7 @@ class BlazePose():
         ])
 
         self.conv13a = BlazeBlock(block_num=5, channel=192, name_prefix="regression_conv13a_", l2_reg=l2_reg)
+        
         self.conv13b = tf.keras.models.Sequential([
             tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, 
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
@@ -137,6 +137,7 @@ class BlazePose():
         ])
 
         self.conv14a = BlazeBlock(block_num=6, channel=288, name_prefix="regression_conv14a_", l2_reg=l2_reg)
+        
         self.conv14b = tf.keras.models.Sequential([
             tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, 
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
@@ -150,7 +151,6 @@ class BlazePose():
             BlazeBlock(block_num=7, channel=288, channel_padding=0, name_prefix="regression_conv15b_", l2_reg=l2_reg)
         ])
 
-        # Final regression layers
         self.conv16 = tf.keras.models.Sequential([
             tf.keras.layers.GlobalAveragePooling2D(),
             tf.keras.layers.Dense(units=2*num_joints, activation=None, 
@@ -166,10 +166,23 @@ class BlazePose():
             tf.keras.layers.Reshape((num_joints, 1)),
             tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
         ])
+        
+        # # Grouping layers - for easy freezing
+        # self.heatmap_layers = [
+        #     self.conv3, self.conv4, self.conv5, self.conv6, self.conv7a, self.conv7b,
+        #     self.conv8a, self.conv8b, self.conv9a, self.conv9b, self.conv10a, self.conv10b,
+        #     self.conv11
+        # ]
+        # self.regression_layers = [
+        #     self.convMODIFICATIONa, self.convMODIFICATIONb, self.conv12a, self.conv12b,
+        #     self.conv13a, self.conv13b, self.conv14a, self.conv14b, self.conv15,
+        #     self.conv16, self.conv17
+        # ]
 
     def call(self):
         input_x = tf.keras.layers.Input(shape=(256, 256, 3))
 
+        # ---------- backbone ----------
         # shape = (1, 256, 256, 3)
         x = self.conv1(input_x)
         # shape x = (1, 128, 128, 24)
