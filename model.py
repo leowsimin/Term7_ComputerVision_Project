@@ -113,50 +113,66 @@ class BlazePose():
 
         # shape = (1, 256, 256, 3)
         x = self.conv1(input_x)
-
+        print(f"X after conv1 --> {x.shape}")
         # shape = (1, 128, 128, 24)
         x = x + self.conv2_1(x)   # <-- skip connection
-        x = tf.keras.activations.relu(x)
+        # x = tf.keras.activations.relu(x)
+        print(f"X after conv_2_1 --> {x.shape}")
         x = x + self.conv2_2(x)
-        y0 = tf.keras.activations.relu(x)
+        print(f"X after conv_2_2 --> {x.shape}")
+        # y0 = tf.keras.activations.relu(x)
 
         # ---------- heatmap branch ----------
         # shape = (1, 128, 128, 24)
+        y0 = x
         y1 = self.conv3(y0) # output res: 64
+        print(f"Y1 shape --> {y1.shape}")
         y2 = self.conv4(y1) # output res:  32
         y3 = self.conv5(y2) # output res:  16
         y4 = self.conv6(y3) # output res:  8
         # shape = (1, 8, 8, 288)
+        print(f"Y2 shape --> {y2.shape}\nY3 shape --> {y3.shape}\nY4 shape --> {y4.shape}")
 
         x = self.conv7a(y4) + self.conv7b(y3)
+        print(f"X conv7a conv7b --> {x.shape}")
         x = self.conv8a(x) + self.conv8b(y2)
+        print(f"X conv8a conv8b --> {x.shape}")
         # shape = (1, 32, 32, 96)
         x = self.conv9a(x) + self.conv9b(y1)
+        print(f"X conv9a conv9b --> {x.shape}")
         # shape = (1, 64, 64, 48)
-        y = x #self.conv10a(x) + self.conv10b(y0)
+        y =  self.conv10a(x) + self.conv10b(y0) #x
+        print("After heatmap:", y.shape)
         #y = self.cbam10(y)
         # shape = (1, 128, 128, 8)
         heatmap = tf.keras.activations.sigmoid(self.conv11(y))
-
+        print(f"Heatmap layer shape: {heatmap.shape}")
         # Stop gradient for regression
         x = tf.keras.ops.stop_gradient(x)
         y2 = tf.keras.ops.stop_gradient(y2)
+        print("y2 Shape:", y2.shape)
         y3 = tf.keras.ops.stop_gradient(y3)
         y4 = tf.keras.ops.stop_gradient(y4)
 
         # ---------- regression branch ----------
         x = self.conv12a(x) + self.conv12b(y2)
+        print("First Regression Branch:", x.shape)
         # shape = (1, 32, 32, 96)
         x = self.conv13a(x) + self.conv13b(y3)
+        print("Second Regression Branch:", x.shape)
         # shape = (1, 16, 16, 192)
         x = self.conv14a(x) + self.conv14b(y4)
+        print("Third Regression Branch:", x.shape)
         # shape = (1, 8, 8, 288)
         x = self.conv15(x)
+        print("Forth Regression Branch:", x.shape)
         # shape = (1, 2, 2, 288)
 
         # using linear + sigmoid
         coordinates = self.conv16(x)
+        print("Coordinates:", coordinates.shape)
         visibility = self.conv17(x)
+        print("Visibility:", visibility.shape)
         result = [heatmap, coordinates, visibility]
 
         return tf.keras.Model(inputs=input_x, outputs=result)
