@@ -112,8 +112,8 @@ else:
                     # True estimation
                     score_j[j] += 1
         # convert to percentage
-        score_j = score_j * 0.1
-        score_avg = sum(score_j) / 14
+        # score_j = score_j * 0.1
+        score_avg = sum(score_j) / 2800
         print(score_j)
         print("Average = %f%%" % score_avg)
     else:

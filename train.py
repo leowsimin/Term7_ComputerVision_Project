@@ -12,7 +12,7 @@ loss_func_mse = tf.keras.losses.MeanSquaredError()
 loss_func_bce = tf.keras.losses.BinaryCrossentropy()
 
 model = BlazePose().call()
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
 model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce])
 
 if train_mode:

@@ -15,5 +15,5 @@ continue_train = 0
 best_pre_train = 98 # num of epoch where the training loss drops but validation accuracy achieve the lowest
 
 # for test only
-epoch_to_test = 66
+epoch_to_test = 20
 use_existing_model_weights = 0
