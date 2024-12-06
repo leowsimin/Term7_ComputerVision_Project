@@ -113,7 +113,7 @@ class BlazePose():
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu", 
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
         ])
 
         self.conv12a = BlazeBlock(block_num=4, channel=96, name_prefix="regression_conv12a_", l2_reg=l2_reg)
@@ -123,7 +123,7 @@ class BlazePose():
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Conv2D(filters=96, kernel_size=1, activation="relu", 
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
         ])
 
         self.conv13a = BlazeBlock(block_num=5, channel=192, name_prefix="regression_conv13a_", l2_reg=l2_reg)
@@ -133,7 +133,7 @@ class BlazePose():
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Conv2D(filters=192, kernel_size=1, activation="relu", 
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
         ])
 
         self.conv14a = BlazeBlock(block_num=6, channel=288, name_prefix="regression_conv14a_", l2_reg=l2_reg)
@@ -156,7 +156,7 @@ class BlazePose():
             tf.keras.layers.Dense(units=2*num_joints, activation=None, 
                                   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Reshape((num_joints, 2)),
-            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
         ])
 
         self.conv17 = tf.keras.models.Sequential([
@@ -164,7 +164,7 @@ class BlazePose():
             tf.keras.layers.Dense(units=num_joints, activation="sigmoid", 
                                   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Reshape((num_joints, 1)),
-            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
         ])
         
         # # Grouping layers - for easy freezing
