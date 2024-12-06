@@ -3,13 +3,13 @@ from layers import BlazeBlock, ChannelAttention, SpatialAttention
 from config import num_joints
 
 class BlazePose():
-    def __init__(self, l2_reg=1e-4, dropout_rate=0.3):  # NOTE: modification - added dropout_rate as a parameter, increased l2_reg from 0 to 1e-4
+    def __init__(self, l2_reg=1e-4, dropout_rate=0.1):  # NOTE: modification - added dropout_rate as a parameter, increased l2_reg from 0 to 1e-4
         self.conv1 = tf.keras.Sequential([
             tf.keras.layers.Conv2D(
                 filters=24, kernel_size=3, strides=(2, 2), padding='same', activation='relu',
                 kernel_regularizer=tf.keras.regularizers.L2(l2_reg)
             ),
-            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout - changed to 0 in earlier layers because model can't train well
         ])
          
         # separable convolution (MobileNet)
@@ -18,14 +18,14 @@ class BlazePose():
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None, 
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
         ])
         self.conv2_2 = tf.keras.models.Sequential([
             tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None, 
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None, 
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
         ])
 
         #  ---------- Heatmap branch ----------
@@ -41,27 +41,27 @@ class BlazePose():
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Conv2DTranspose(filters=48, kernel_size=2, strides=2, padding="same", activation="relu", 
                                              kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
         ])
         self.conv7b = tf.keras.models.Sequential([
             tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, 
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu", 
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
         ])
 
         self.conv8a = tf.keras.models.Sequential([
             tf.keras.layers.Conv2DTranspose(filters=48, kernel_size=2, strides=2, padding="same", activation="relu", 
                                              kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
         ])
         self.conv8b = tf.keras.models.Sequential([
             tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, 
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu", 
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
         ])
         
         self.conv9a = tf.keras.models.Sequential([
@@ -113,7 +113,7 @@ class BlazePose():
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu", 
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
         ])
 
         self.conv12a = BlazeBlock(block_num=4, channel=96, name_prefix="regression_conv12a_", l2_reg=l2_reg)
@@ -123,7 +123,7 @@ class BlazePose():
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Conv2D(filters=96, kernel_size=1, activation="relu", 
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
         ])
 
         self.conv13a = BlazeBlock(block_num=5, channel=192, name_prefix="regression_conv13a_", l2_reg=l2_reg)
@@ -133,7 +133,7 @@ class BlazePose():
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Conv2D(filters=192, kernel_size=1, activation="relu", 
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
         ])
 
         self.conv14a = BlazeBlock(block_num=6, channel=288, name_prefix="regression_conv14a_", l2_reg=l2_reg)
@@ -143,7 +143,7 @@ class BlazePose():
                                             depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
             tf.keras.layers.Conv2D(filters=288, kernel_size=1, activation="relu", 
                                    kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Dropout(rate=dropout_rate)  # NOTE: Add dropout
+            tf.keras.layers.Dropout(rate=0)  # NOTE: Add dropout
         ])
 
         self.conv15 = tf.keras.models.Sequential([
