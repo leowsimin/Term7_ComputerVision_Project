@@ -133,8 +133,7 @@ class BlazePose():
         # shape = (1, 32, 32, 96)
         x = self.conv9a(x) + self.conv9b(y1)
         # shape = (1, 64, 64, 48)
-        y = x #self.conv10a(x) + self.conv10b(y0)
-        #y = self.cbam10(y)
+        y = self.conv10a(x) + self.conv10b(y0)
         # shape = (1, 128, 128, 8)
         heatmap = tf.keras.activations.sigmoid(self.conv11(y))
 

@@ -6,7 +6,7 @@ from model import BlazePose
 from config import total_epoch, train_mode, continue_train_from_filename, batch_size, dataset, continue_train, best_pre_train_filename, img_idxs
 from data import x_train, y_train, x_val, y_val, x_test, y_test
 from utils import metrics
-from utils.draw import draw_images
+from utils.draw import draw_heatmaps, draw_images
 import utils.logger as logger
 import utils.experiment_tracker as experiment_tracker
 import mlflow
@@ -95,6 +95,10 @@ try:
     image_files = draw_images(model, img_idxs=img_idxs)
     for image_file in image_files:
         mlflow.log_artifact(image_file)
+
+    image_files = draw_heatmaps(model, img_idxs=img_idxs)
+    for image_file in image_files:
+        mlflow.log_artifact(image_file)        
 
     if train_mode > 0: # if regression mode -> model prbl quite good -> save model weights
         model_folder_path = os.path.join(checkpoint_path, "models")
