@@ -6,7 +6,7 @@ import pathlib
 from model import BlazePose
 from config import epoch_to_test, eval_mode, dataset, use_existing_model_weights, pck_metric, batch_size, img_idxs
 from data import x_test, y_test
-from utils.draw import draw_images
+from utils.draw import draw_images, draw_heatmaps
 import utils.logger as logger
 # import utils.experiment_tracker
 import utils.metrics as metrics
@@ -46,6 +46,10 @@ mlflow.log_metrics({"test_coordinates_pck": res[-1]})
 # mlflow.log_artifact('/tmp/model_architecture.png')
 
 image_files = draw_images(model, img_idxs=img_idxs)
+for image_file in image_files:
+    mlflow.log_artifact(image_file)  
+
+image_files = draw_heatmaps(model, img_idxs=img_idxs)
 for image_file in image_files:
     mlflow.log_artifact(image_file)                            
 

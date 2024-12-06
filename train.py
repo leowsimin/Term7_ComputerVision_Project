@@ -6,7 +6,7 @@ from model import BlazePose
 from config import total_epoch, train_mode, continue_train_from_filename, batch_size, dataset, continue_train, best_pre_train_filename, img_idxs
 from data import x_train, y_train, x_val, y_val, x_test, y_test
 from utils import metrics
-from utils.draw import draw_images
+from utils.draw import draw_heatmaps, draw_images
 import utils.logger as logger
 
 checkpoint_path_heatmap = "checkpoints_heatmap"
