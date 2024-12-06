@@ -20,7 +20,7 @@ logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # create file handler which logs even debug messages
-filename = f'{datetime.today().strftime('%Y_%m_%d_%H_%M_%S')}'
+filename = f"{datetime.today().strftime('%Y_%m_%d_%H_%M_%S')}"
 fh = logging.FileHandler(f'logs/{filename}.log')
 fh.setLevel(logging.DEBUG)
 fh.setFormatter(formatter)

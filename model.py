@@ -67,6 +67,21 @@ class BlazePose():
         ])
 
         # ---------- Regression branch ----------
+        
+        
+        ##### START MOD #####
+        # NOTE: #  shape = (1, 128, 128, 24)
+        self.convMODIFICATIONa = BlazeBlock(block_num = 3, channel = 48, name_prefix="regression_convMOD_")
+        
+        self.convMODIFICATIONb = tf.keras.models.Sequential([
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, name="regression_convMOD_depthwise",   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu", name="regression_convMOD_conv1x1",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
+        ], name="regression_convMOD")
+        ##### END MOD #####
+        
+        
+        
+        
         #  shape = (1, 64, 64, 48)
         self.conv12a = BlazeBlock(block_num = 4, channel = 96, name_prefix="regression_conv12a_")    # input res: 64
         self.conv12b = tf.keras.models.Sequential([
@@ -113,15 +128,17 @@ class BlazePose():
 
         # shape = (1, 256, 256, 3)
         x = self.conv1(input_x)
-
-        # shape = (1, 128, 128, 24)
+        # shape x = (1, 128, 128, 24)
+        
         x = x + self.conv2_1(x)   # <-- skip connection
         x = tf.keras.activations.relu(x)
         x = x + self.conv2_2(x)
         y0 = tf.keras.activations.relu(x)
+        # print("y0 shape: ", y0.shape)
 
         # ---------- heatmap branch ----------
         # shape = (1, 128, 128, 24)
+        # y0 is 128x128x24
         y1 = self.conv3(y0) # output res: 64
         y2 = self.conv4(y1) # output res:  32
         y3 = self.conv5(y2) # output res:  16
@@ -133,18 +150,30 @@ class BlazePose():
         # shape = (1, 32, 32, 96)
         x = self.conv9a(x) + self.conv9b(y1)
         # shape = (1, 64, 64, 48)
-        y = x #self.conv10a(x) + self.conv10b(y0)
+        x = self.conv10a(x) + self.conv10b(y0)  # NOTE: changed y to x to make 128x128 as the input now
+        # shape = (1, 128, 128, 24)
         #y = self.cbam10(y)
-        # shape = (1, 128, 128, 8)
-        heatmap = tf.keras.activations.sigmoid(self.conv11(y))
-
+        
+        heatmap = tf.keras.activations.sigmoid(self.conv11(x)) # NOTE: shape = (1, 128, 128, 24)
+        
         # Stop gradient for regression
         x = tf.keras.ops.stop_gradient(x)
+        y1 = tf.keras.ops.stop_gradient(y1) # NOTE: MOD stop gradient for y1 since it is now being used in the regression branch as well
         y2 = tf.keras.ops.stop_gradient(y2)
         y3 = tf.keras.ops.stop_gradient(y3)
         y4 = tf.keras.ops.stop_gradient(y4)
 
         # ---------- regression branch ----------
+        # print("x result: ", self.conv12a(x).shape)
+        # print("y2 result: ", self.conv12b(y2).shape)
+        # print("heatmap result: ", self.convMODIFICATIONb(heatmap).shape)
+        
+        # print("mod a shape: ", self.convMODIFICATIONa(x).shape)
+        # print("heatmap shape: ", heatmap.shape)
+        # print("mod b shape: ", self.convMODIFICATIONb(y1).shape)
+        
+        x = self.convMODIFICATIONa(x) + self.convMODIFICATIONb(y1) # NOTE: MOD one more layer for regression
+        # shape = (1, 64, 64, 48)
         x = self.conv12a(x) + self.conv12b(y2)
         # shape = (1, 32, 32, 96)
         x = self.conv13a(x) + self.conv13b(y3)

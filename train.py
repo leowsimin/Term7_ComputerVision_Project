@@ -8,8 +8,8 @@ from data import x_train, y_train, x_val, y_val, x_test, y_test
 from utils import metrics
 from utils.draw import draw_images
 import utils.logger as logger
-import utils.experiment_tracker as experiment_tracker
-import mlflow
+# import utils.experiment_tracker as experiment_tracker
+#import mlflow
 
 checkpoint_path_heatmap = "checkpoints_heatmap"
 checkpoint_path_regression = "checkpoints_regression"
@@ -86,20 +86,20 @@ try:
                    batch_size=batch_size, 
                    callbacks=[logger.keras_custom_callback])
     print("Test PCK score:", res[-1])
-    mlflow.log_metrics({"test_coordinates_pck": res[-1]})
+    # mlflow.log_metrics({"test_coordinates_pck": res[-1]})
 
     # model.summary(print_fn=logger.print_and_log, show_trainable=True)
     # tf.keras.utils.plot_model(model, to_file='/tmp/model_architecture.png', show_shapes=True, show_layer_activations=True, show_trainable=True)
     # mlflow.log_artifact('/tmp/model_architecture.png')
 
     image_files = draw_images(model, img_idxs=img_idxs)
-    for image_file in image_files:
-        mlflow.log_artifact(image_file)
+    # for image_file in image_files:
+    #     mlflow.log_artifact(image_file)
 
     if train_mode > 0: # if regression mode -> model prbl quite good -> save model weights
         model_folder_path = os.path.join(checkpoint_path, "models")
         newest_weight_file = os.path.join(model_folder_path, f"model_ep{total_epoch:02d}.weights.h5")
-        mlflow.log_artifact(newest_weight_file)
+        # w.log_artifact(newest_weight_file)
 
     print("Finish training.")
 except Exception as ex:

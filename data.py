@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 from scipy.io import loadmat
 from config import num_joints, dataset, num_images, train_split, val_split, test_split, heat_size
-import mlflow
+# import mlflow
 
 # guassian generation
 def getGaussianMap(joint = (16, 16), heat_size = 128, sigma = 2):
@@ -85,12 +85,12 @@ y_val = [heatmap_set[val_start:val_end], coordinates[val_start:val_end], visibil
 x_test = data[test_start:test_end]
 y_test = [heatmap_set[test_start:test_end], coordinates[test_start:test_end], visibility[test_start:test_end]]
 
-try:
-    mlflow_dataset = mlflow.data.from_numpy(x_train, targets=y_train[1]) # log coord target only
-    mlflow.log_input(mlflow_dataset, context="training")
-    mlflow_dataset = mlflow.data.from_numpy(x_val, targets=y_val[1])
-    mlflow.log_input(mlflow_dataset, context="validation")
-    mlflow_dataset = mlflow.data.from_numpy(x_test, targets=y_test[1])
-    mlflow.log_input(mlflow_dataset, context="test")
-except:
-    pass
+# try:
+#     mlflow_dataset = mlflow.data.from_numpy(x_train, targets=y_train[1]) # log coord target only
+#     mlflow.log_input(mlflow_dataset, context="training")
+#     mlflow_dataset = mlflow.data.from_numpy(x_val, targets=y_val[1])
+#     mlflow.log_input(mlflow_dataset, context="validation")
+#     mlflow_dataset = mlflow.data.from_numpy(x_test, targets=y_test[1])
+#     mlflow.log_input(mlflow_dataset, context="test")
+# except:
+#     pass

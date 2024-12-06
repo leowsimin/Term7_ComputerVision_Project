@@ -8,10 +8,10 @@ from config import epoch_to_test, eval_mode, dataset, use_existing_model_weights
 from data import x_test, y_test
 from utils.draw import draw_images
 import utils.logger as logger
-import utils.experiment_tracker
+# import utils.experiment_tracker
 import utils.metrics as metrics
 from data import coordinates, visibility, heatmap_set, data, number_images
-import mlflow
+# import mlflow
 
 def Eclidian2(a, b):
 # Calculate the square of Eclidian distance
@@ -39,15 +39,15 @@ model.load_weights(weight_filepath)
 
 res = model.evaluate(x=x_test, y=y_test, batch_size=batch_size, callbacks=[logger.keras_custom_callback])       
 print("Test PCK score:", res[-1])
-mlflow.log_metrics({"test_coordinates_pck": res[-1]})
+# mlflow.log_metrics({"test_coordinates_pck": res[-1]})
 
 # model.summary(print_fn=logger.print_and_log, show_trainable=True)
 tf.keras.utils.plot_model(model, to_file='/tmp/model_architecture.png', show_shapes=True, show_layer_activations=True, show_trainable=True)
-mlflow.log_artifact('/tmp/model_architecture.png')
+# mlflow.log_artifact('/tmp/model_architecture.png')
 
 image_files = draw_images(model, img_idxs=img_idxs)
-for image_file in image_files:
-    mlflow.log_artifact(image_file)                            
+# for image_file in image_files:
+    # mlflow.log_artifact(image_file)                            
 
 # if dataset == "lsp":
 #     coordinates = np.zeros((200, 14, 2)).astype(np.uint8)
