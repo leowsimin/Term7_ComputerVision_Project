@@ -11,59 +11,61 @@ class BlazePose():
          
         # separable convolution (MobileNet)
         self.conv2_1 = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None,   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None, depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None, kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
         self.conv2_2 = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None,   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None, depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None, kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
         #  ---------- Heatmap branch ----------
-        self.conv3 = BlazeBlock(block_num = 3, channel = 48)    # input res: 128
-        self.conv4 = BlazeBlock(block_num = 4, channel = 96)    # input res: 64
-        self.conv5 = BlazeBlock(block_num = 5, channel = 192)   # input res: 32
-        self.conv6 = BlazeBlock(block_num = 6, channel = 288)   # input res: 16
+        self.conv3 = BlazeBlock(block_num=3, channel=48)  # input res: 128
+        self.conv4 = BlazeBlock(block_num=4, channel=96)  # input res: 64
+        self.conv5 = BlazeBlock(block_num=5, channel=192) # input res: 32
+        self.conv6 = BlazeBlock(block_num=6, channel=288) # input res: 16
 
         self.conv7a = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.UpSampling2D(size=(2, 2), interpolation="bilinear")
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu", kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2DTranspose(filters=48, kernel_size=2, strides=2, padding="same", activation="relu", kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
         self.conv7b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu", kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
-        self.conv8a = tf.keras.layers.UpSampling2D(size=(2, 2), interpolation="bilinear")
+        self.conv8a = tf.keras.layers.Conv2DTranspose(
+            filters=48, kernel_size=2, strides=2, padding="same", activation="relu", kernel_regularizer=tf.keras.regularizers.L2(l2_reg)
+        )
         self.conv8b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu", kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
-        self.conv9a = tf.keras.layers.UpSampling2D(size=(2, 2), interpolation="bilinear")
+        self.conv9a = tf.keras.layers.Conv2DTranspose(
+            filters=48, kernel_size=2, strides=2, padding="same", activation="relu", kernel_regularizer=tf.keras.regularizers.L2(l2_reg)
+        )
         self.conv9b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu", kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
         self.conv10a = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.UpSampling2D(size=(2, 2), interpolation="bilinear"
-            )
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu", kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2DTranspose(filters=8, kernel_size=2, strides=2, padding="same", activation="relu", kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
         self.conv10b = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu", kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
         # the output layer for heatmap and offset
         self.conv11 = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            # heatmap
-            tf.keras.layers.Conv2D(filters=num_joints, kernel_size=3, padding="same", activation=None,   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu", kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=num_joints, kernel_size=3, padding="same", activation=None, kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
         # ---------- Regression branch ----------
