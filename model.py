@@ -74,9 +74,9 @@ class BlazePose():
         self.convMODIFICATIONa = BlazeBlock(block_num = 3, channel = 48, name_prefix="regression_convMOD_")
         
         self.convMODIFICATIONb = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, name="regression_convMOD_depthwise",   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu", name="regression_convMOD_conv1x1",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
-        ], name="regression_convMOD")
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None, name="regression_convMODb_depthwise",   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=48, kernel_size=1, activation="relu", name="regression_convMODb_conv1x1",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
+        ], name="regression_convMODb")
         ##### END MOD #####
         
         
