@@ -1,6 +1,7 @@
 import pathlib, cv2
 import numpy as np
 from data import data, coordinates, heatmap_set, visibility
+import matplotlib.pyplot as plt
 
 def draw_images(model, img_idxs: list[int]):  
     pathlib.Path("result").mkdir(parents=True, exist_ok=True)
@@ -34,8 +35,6 @@ def draw_images(model, img_idxs: list[int]):
         cv2.imwrite(filename, img)
         filenames.append(filename)
     return filenames
-
-from matplotlib import pyplot as plt
 
 def draw_heatmaps(model, img_idxs: list[int]):  
     pathlib.Path("result").mkdir(parents=True, exist_ok=True)
