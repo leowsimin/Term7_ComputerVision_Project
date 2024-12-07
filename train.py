@@ -46,14 +46,14 @@ loss_func_bce = tf.keras.losses.BinaryCrossentropy()
 model_instance = BlazePose()
 model = model_instance.call()
 
-lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-    initial_learning_rate=0.001,
-    decay_steps=1000,
-    decay_rate=0.96,
-    staircase=True
-)
+# lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+#     initial_learning_rate=0.001,
+#     decay_steps=1000,
+#     decay_rate=0.96,
+#     staircase=True
+# )
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule) # NOTE: added schedule to warm up the learning rate
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.001) # NOTE: added schedule to warm up the learning rate
 model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], 
               metrics=[None, metrics.PCKMetric(), None])
 

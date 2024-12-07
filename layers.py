@@ -6,7 +6,7 @@ from tensorflow.python.keras import backend as K
 # NOTE: ryan: had to modify this quite a bit to add the l2 regularization - l2_reg is now a parameter, and they are added to the depthwise convolution and standard convolutional layers
 
 class BlazeBlock(tf.keras.Model):
-    def __init__(self, block_num=3, channel=48, channel_padding=1, name_prefix="", l2_reg=1e-4):
+    def __init__(self, block_num=3, channel=48, channel_padding=1, name_prefix="", l2_reg=1e-6):
         super(BlazeBlock, self).__init__()
         self.downsample_a = tf.keras.models.Sequential([
             tf.keras.layers.DepthwiseConv2D(
