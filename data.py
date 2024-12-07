@@ -81,6 +81,8 @@ for i in range(number_images):
 label = np.concatenate([label,flipped_labels],axis=0)
 data = np.concatenate([data,flipped_data],axis=0)
 heatmap_set = np.concatenate([heatmap_set,flipped_heatmap_set],axis=0)
+number_images = label.shape[0]
+
 coordinates = label[:, :, 0:2]
 visibility = label[:, :, 2:]
 

@@ -3,7 +3,7 @@ import os
 import pathlib
 import tensorflow as tf
 from model import BlazePose
-from config import total_epoch, train_mode, best_pre_train, continue_train, batch_size, dataset
+from config import total_epoch, train_mode, best_pre_train_filename, continue_train, batch_size, dataset
 from data import coordinates, visibility, heatmap_set, data, number_images
 #import logger
 
@@ -34,8 +34,8 @@ if continue_train > 0:
     model.load_weights(os.path.join(checkpoint_path, "models/model_ep{}.weights.h5".format(continue_train)))
 else:
     if train_mode:
-        print("Load heatmap weights", os.path.join(checkpoint_path_heatmap, "models/model_ep{}.weights.h5".format(best_pre_train)))
-        model.load_weights(os.path.join(checkpoint_path_heatmap, "models/model_ep{}.weights.h5".format(best_pre_train)))
+        print("Load heatmap weights", os.path.join(checkpoint_path_heatmap, "models/model_ep{}.weights.h5".format(best_pre_train_filename)))
+        model.load_weights(os.path.join(checkpoint_path_heatmap, "models/model_ep{}.weights.h5".format(best_pre_train_filename)))
 
 if train_mode:
     print("Freeze these layers:")

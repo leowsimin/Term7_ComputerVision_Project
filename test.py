@@ -42,8 +42,11 @@ print("Test PCK score:", res[-1])
 mlflow.log_metrics({"test_coordinates_pck": res[-1]})
 
 # model.summary(print_fn=logger.print_and_log, show_trainable=True)
-tf.keras.utils.plot_model(model, to_file='/tmp/model_architecture.png', show_shapes=True, show_layer_activations=True, show_trainable=True)
-mlflow.log_artifact('/tmp/model_architecture.png')
+tmp_dir = os.path.join(os.getcwd(), "tmp")
+os.makedirs(tmp_dir, exist_ok=True)
+output_file = os.path.join(tmp_dir, "model_architecture.png")
+tf.keras.utils.plot_model(model, to_file=output_file, show_shapes=True, show_layer_activations=True, show_trainable=True)
+mlflow.log_artifact(output_file)
 
 image_files = draw_images(model, img_idxs=img_idxs)
 for image_file in image_files:
