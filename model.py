@@ -1,5 +1,5 @@
 import tensorflow as tf
-from layers import BlazeBlock, ChannelAttention, SpatialAttention
+from layers import BlazeBlock, PatchEmbedding, PositionalEmbedding, TransformerBlock, ReshapeLayer
 from config import num_joints
 
 class BlazePose():
@@ -19,6 +19,26 @@ class BlazePose():
             tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None,   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
+        #  ---------- ViT Transformer ----------
+        self.num_transformer_layers = 6
+
+        self.patch_size = (16, 16)
+        self.num_patches = (128 // 16) * (128 // 16) #64 patches
+        self.height = self.width = int(self.num_patches**0.5) 
+        self.embed_dim = 128
+
+        self.patch_embedding_layer = PatchEmbedding(self.patch_size, self.embed_dim)
+
+        self.positional_embedding_layer = PositionalEmbedding(self.num_patches, self.embed_dim)
+
+        self.num_heads = 4
+        self.mlp_hidden_dim = 256 # Should be greater than the embded_dim
+
+        self.transformer_block = TransformerBlock(embed_dim=self.embed_dim, num_heads=self.num_heads, mlp_hidden_dim=self.mlp_hidden_dim)
+
+        #THIS PORTION
+        self.reshape_layer = ReshapeLayer(target_shape=(-1, self.height, self.width, self.embed_dim))
+        self.conv1x1 = tf.keras.layers.Conv2D(24, (1, 1), activation="relu")
         #  ---------- Heatmap branch ----------
         self.conv3 = BlazeBlock(block_num = 3, channel = 48)    # input res: 128
         self.conv4 = BlazeBlock(block_num = 4, channel = 96)    # input res: 64
@@ -122,6 +142,26 @@ class BlazePose():
         print(f"X after conv_2_2 --> {x.shape}")
         # y0 = tf.keras.activations.relu(x)
 
+        # ---------- ViT Transformer ----------
+        embedded_patches = self.patch_embedding_layer(x)
+        print("Shape of embedded patches:", embedded_patches.shape)
+
+        embedded_patches_with_position = self.positional_embedding_layer(embedded_patches)
+        print("Shape of embedded patches with positional embeddings:", embedded_patches_with_position.shape)
+
+        transformer_output = embedded_patches_with_position
+        for _ in range(self.num_transformer_layers):  # Stack multiple layers
+            transformer_output = self.transformer_block(transformer_output)
+        print("Shape after stacking Transformer Blocks:", transformer_output.shape)
+        
+        ## FIX THIS PORTION.
+        # Reshaping the patches into a 2D grid (e.g., 8x8 grid for 64 patches)
+        reshaped_output = self.reshape_layer(transformer_output)
+        print("Reshaped Output:", reshaped_output)
+        # Now apply your 1x1 convolution layer to the reshaped output
+        output = self.conv1x1(reshaped_output)
+        print("Final output after conv1x1:", output.shape)
+
         # ---------- heatmap branch ----------
         # shape = (1, 128, 128, 24)
         y0 = x
@@ -155,6 +195,7 @@ class BlazePose():
         y4 = tf.keras.ops.stop_gradient(y4)
 
         # ---------- regression branch ----------
+        print("Before First Regression Branch:", x.shape)
         x = self.conv12a(x) + self.conv12b(y2)
         print("First Regression Branch:", x.shape)
         # shape = (1, 32, 32, 96)
