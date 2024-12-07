@@ -28,7 +28,7 @@ def getGaussianMap(joint = (16, 16), heat_size = 128, sigma = 2):
     return heatmap
 
 # read annotations
-annotations = loadmat("./dataset/" + dataset + "/joints.mat")
+annotations = loadmat("./dataset/" + dataset + "/joints.mat") # ground truth values
 number_images = num_images
 if dataset == "lsp":
     # LSP
@@ -42,9 +42,16 @@ else:
     label = label.swapaxes(0, 2)                    # shape (3, 14, 10000) -> (10000, 14, 3)
 label = label[:number_images, :, :]
 
+flipped_labels = label.copy()  # Copy the original labels
+
+# Flip the `x` coordinates of the joints for the flipped images
+flipped_labels[:, :, 0] = 256 - flipped_labels[:, :, 0]  # Assuming the images are resized to 256x256
+
 # read images
 data = np.zeros([number_images, 256, 256, 3])
+flipped_data = np.zeros([number_images, 256, 256, 3])
 heatmap_set = np.zeros((number_images, heat_size, heat_size, num_joints), dtype=np.float32)
+flipped_heatmap_set = np.zeros((number_images, heat_size, heat_size, num_joints), dtype=np.float32)
 print("Reading dataset...")
 for i in range(number_images):
     if dataset == "lsp":
@@ -60,14 +67,20 @@ for i in range(number_images):
     label[i, :, 0] *= (256 / img_shape[1])
     label[i, :, 1] *= (256 / img_shape[0])
     data[i] = tf.image.resize(img, [256, 256])
+    flipped_data[i] = tf.image.flip_left_right(data[i])
     # generate heatmap set
     for j in range(num_joints):
         _joint = (label[i, j, 0:2] // (256 / heat_size)).astype(np.uint16)
         heatmap_set[i, :, :, j] = getGaussianMap(joint = _joint, heat_size = heat_size, sigma = 4)
+        flipped_joint = (flipped_labels[i, j, 0:2] // (256 / heat_size)).astype(np.uint16)
+        flipped_heatmap_set[i,:, :, j] = getGaussianMap(joint=flipped_joint, heat_size=heat_size, sigma=4)
     # print status
     if not i % (number_images // 80):
         print(">", end='')
 
+label = np.concatenate([label,flipped_labels],axis=0)
+data = np.concatenate([data,flipped_data],axis=0)
+heatmap_set = np.concatenate([heatmap_set,flipped_heatmap_set],axis=0)
 coordinates = label[:, :, 0:2]
 visibility = label[:, :, 2:]
 
