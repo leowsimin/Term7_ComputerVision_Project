@@ -8,7 +8,6 @@ def draw_images(model, img_idxs: list[int]):
     filenames = []
     for t in img_idxs:
         heatmap, preds, _ = model.predict(data[t:t+1])
-        print(heatmap.shape)
         gt_skeleton = coordinates[t].astype(np.uint8)
         pred_skeleton = preds[0].astype(np.uint8)
         assert gt_skeleton.shape == pred_skeleton.shape
@@ -44,14 +43,15 @@ def draw_heatmaps(model, img_idxs: list[int]):
     target_size = 256  # Target size for heatmaps
     for t in img_idxs:
         fig = plt.figure(figsize=(56, 56))
-        heatmaps, _, _ = model.predict(data[t:t+1])
+        heatmaps, preds, _ = model.predict(data[t:t+1])
         gt_skeleton = coordinates[t].astype(np.uint8)  
         img = data[t].astype(np.uint8)
-        
+        np.savetxt('tmp/heatmap.txt', heatmaps[0,:,:,9], fmt='%d')
         heatmaps = np.uint8(255 * heatmaps) # (1, 128, 128, 14)
-        for kp in range(heatmaps.shape[-1]):
 
+        for kp in range(14):
             heatmap = heatmaps[0, :, :, kp]
+
             if heatmap.shape[0] < target_size or heatmap.shape[1] < target_size:
                 heatmap = cv2.resize(
                     heatmap,

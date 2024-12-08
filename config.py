@@ -2,10 +2,11 @@ num_joints = 14     # lsp dataset
 num_images = 2000 # above 400, below 2000
 
 batch_size = 16
-total_epoch = 50
+total_epoch = 20
 dataset = "lsp" # "lspet"
 train_split, val_split, test_split = 0.6, 0.2, 0.2 # split
 heat_size = 128
+negative_joint_factor = 1
 
 # Train mode: 0-heatmap, 1-regression
 train_mode = 0

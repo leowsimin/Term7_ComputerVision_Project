@@ -15,11 +15,19 @@ checkpoint_path_heatmap = "checkpoints_heatmap"
 checkpoint_path_regression = "checkpoints_regression"
 loss_func_mse = tf.keras.losses.MeanSquaredError()
 loss_func_bce = tf.keras.losses.BinaryCrossentropy()
+loss_func_smooth_l1 = tf.keras.losses.Huber(
+    delta=1.0,
+    reduction='sum_over_batch_size',
+    name='huber_loss'
+)
+loss_func_msle = tf.keras.losses.MeanSquaredLogarithmicError()
 
 model = BlazePose().call()
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], 
-            metrics=[None, metrics.PCKMetric(), None])
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
+model.compile(optimizer, 
+              loss=[loss_func_smooth_l1, loss_func_mse, loss_func_bce], 
+              loss_weights=[100, 0.0001, 1],
+              metrics=[None, metrics.PCKMetric(), None])
 
 if train_mode:
     checkpoint_path = checkpoint_path_regression
@@ -47,7 +55,7 @@ else:
         model.load_weights(os.path.join(checkpoint_path_heatmap, "models/{}".format(best_pre_train_filename)))
 
 # Define the callbacks
-if continue_train_from_filename:
+if continue_train:
     model_folder_path = os.path.join(checkpoint_path, f"models_1")
     pathlib.Path(model_folder_path).mkdir(parents=True, exist_ok=True)
     mc = tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(

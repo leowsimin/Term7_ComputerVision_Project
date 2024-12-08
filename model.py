@@ -8,6 +8,7 @@ class BlazePose():
             filters=24, kernel_size=3, strides=(2, 2), padding='same', activation='relu',
             kernel_regularizer=tf.keras.regularizers.L2(l2_reg)
         )
+        self.norm1 = tf.keras.layers.BatchNormalization()
          
         # separable convolution (MobileNet)
         self.conv2_1 = tf.keras.models.Sequential([
@@ -111,6 +112,8 @@ class BlazePose():
     def call(self):
         input_x = tf.keras.layers.Input(shape=(256, 256, 3))
 
+        # x = self.norm1(input_x)
+
         # shape = (1, 256, 256, 3)
         x = self.conv1(input_x)
 
@@ -135,7 +138,7 @@ class BlazePose():
         # shape = (1, 64, 64, 48)
         y = self.conv10a(x) + self.conv10b(y0)
         # shape = (1, 128, 128, 8)
-        heatmap = tf.keras.activations.sigmoid(self.conv11(y))
+        heatmap = tf.keras.activations.tanh(self.conv11(y))
 
         # Stop gradient for regression
         x = tf.keras.ops.stop_gradient(x)

@@ -2,7 +2,7 @@
 import numpy as np
 import tensorflow as tf
 from scipy.io import loadmat
-from config import num_joints, dataset, num_images, train_split, val_split, test_split, heat_size
+from config import num_joints, dataset, num_images, train_split, val_split, test_split, heat_size, negative_joint_factor
 import mlflow
 
 # guassian generation
@@ -25,7 +25,11 @@ def getGaussianMap(joint = (16, 16), heat_size = 128, sigma = 2):
     img_x = max(0, ul[0]), min(br[0], heat_size)
     img_y = max(0, ul[1]), min(br[1], heat_size)
     heatmap[img_y[0]:img_y[1], img_x[0]:img_x[1]] = g[g_y[0]:g_y[1], g_x[0]:g_x[1]]
+    # np.savetxt('tmp/heatmap.txt', np.uint8(255 * heatmap), fmt='%d')
     return heatmap
+
+# e.g. right ankle: left ankle
+negative_joint_dict = {0: 5, 1: 4, 2:3, 6: 11, 7: 10, 8: 9, 12: None, 13: None, 5: 0, 4: 1, 3: 2, 11: 6, 10: 7, 9: 8}
 
 # read annotations
 annotations = loadmat("./dataset/" + dataset + "/joints.mat")
@@ -61,12 +65,25 @@ for i in range(number_images):
     label[i, :, 1] *= (256 / img_shape[0])
     data[i] = tf.image.resize(img, [256, 256])
     # generate heatmap set
+    heatmaps = {}
     for j in range(num_joints):
         _joint = (label[i, j, 0:2] // (256 / heat_size)).astype(np.uint16)
-        heatmap_set[i, :, :, j] = getGaussianMap(joint = _joint, heat_size = heat_size, sigma = 4)
+        heatmaps[j] = heatmaps.get(j, getGaussianMap(joint = _joint, heat_size = heat_size, sigma = 4))
+
+        # apply negative values for opposing joint
+        if negative_joint_factor != 0 and negative_joint_dict[j] is not None:
+            j_neg = negative_joint_dict[j]
+            if j_neg in heatmaps:
+                negative_heatmap = heatmaps.get(j_neg)
+            else:
+                _negative_joint = (label[i, j_neg, 0:2] // (256 / heat_size)).astype(np.uint16)
+                negative_heatmap = getGaussianMap(joint = _negative_joint, heat_size = heat_size, sigma = 4)
+                heatmaps[j_neg] = negative_heatmap
+            heatmap_set[i, :, :, j] = heatmaps[j] - negative_joint_factor * negative_heatmap
+        else:
+            heatmap_set[i, :, :, j] = heatmaps[j]
+
     # print status
-    if not i % (number_images // 80):
-        print(">", end='')
 
 coordinates = label[:, :, 0:2]
 visibility = label[:, :, 2:]
