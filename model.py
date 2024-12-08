@@ -1,6 +1,7 @@
 import tensorflow as tf
-from layers import BlazeBlock, PatchEmbedding, PositionalEmbedding, TransformerBlock, ReshapeLayer
+from layers import BlazeBlock, PatchEmbedding, PositionalEmbedding, TransformerBlock
 from config import num_joints
+from tensorflow.python.keras import backend as K
 
 class BlazePose():
     def __init__(self, l2_reg=0):
@@ -36,9 +37,12 @@ class BlazePose():
 
         self.transformer_block = TransformerBlock(embed_dim=self.embed_dim, num_heads=self.num_heads, mlp_hidden_dim=self.mlp_hidden_dim)
 
+        # self.reshaped_fn = Reshape((-1, 8, 8, 128))
+
         #THIS PORTION
-        self.reshape_layer = ReshapeLayer(target_shape=(-1, self.height, self.width, self.embed_dim))
+        self.reshape_layer = tf.keras.layers.Reshape(target_shape=(-1, self.height, self.width, self.embed_dim))
         self.conv1x1 = tf.keras.layers.Conv2D(24, (1, 1), activation="relu")
+        
         #  ---------- Heatmap branch ----------
         self.conv3 = BlazeBlock(block_num = 3, channel = 48)    # input res: 128
         self.conv4 = BlazeBlock(block_num = 4, channel = 96)    # input res: 64
@@ -129,7 +133,7 @@ class BlazePose():
         ], name="visibility")
 
     def call(self):
-        input_x = tf.keras.layers.Input(shape=(256, 256, 3))
+        input_x = tf.keras.layers.Input(shape=(256, 256, 3)) #Keras symbolic tensor
 
         # shape = (1, 256, 256, 3)
         x = self.conv1(input_x)
@@ -156,11 +160,16 @@ class BlazePose():
         
         ## FIX THIS PORTION.
         # Reshaping the patches into a 2D grid (e.g., 8x8 grid for 64 patches)
-        reshaped_output = self.reshape_layer(transformer_output)
-        print("Reshaped Output:", reshaped_output)
-        # Now apply your 1x1 convolution layer to the reshaped output
-        output = self.conv1x1(reshaped_output)
-        print("Final output after conv1x1:", output.shape)
+        # transformer_output: Keras Symbolic Tensor
+
+        # print("transformer_output type:", type(transformer_output))
+        reshaped_patches = self.reshape_layer(transformer_output)# (None, 8, 8, 128)
+        reshaped_patches = reshaped_patches[:, 0, :, :, :]
+        print('Reshaped size:', reshaped_patches.shape)
+
+        output = self.conv1x1(reshaped_patches)
+
+        print("Output shape:", output.shape)  # (None, 128, 128, 24)
 
         # ---------- heatmap branch ----------
         # shape = (1, 128, 128, 24)

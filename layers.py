@@ -1,6 +1,5 @@
 import tensorflow as tf
 from tensorflow.python.keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Reshape, Dense, multiply, Permute, Concatenate, Conv2D, Add, Activation, Lambda, Layer
-from tensorflow.python.keras import backend as K
 
 
 class BlazeBlock(tf.keras.Model):
@@ -123,11 +122,18 @@ class MyLayer(tf.keras.layers.Layer):
         # Ensuring that x is correctly processed as a Keras tensor
         return tf.reshape(x, (-1, 64, 64, 24))  # Example reshaping
     
-class ReshapeLayer(Layer):
-    def __init__(self, target_shape, **kwargs):
-        super(ReshapeLayer, self).__init__(**kwargs)
-        self.target_shape = target_shape
+# class ReshapeLayer(Layer):
+#     def __init__(self, target_shape, **kwargs):
+#         super(ReshapeLayer, self).__init__(**kwargs)
+#         self.reshape = Reshape(target_shape)
 
-    def call(self, inputs):
-        # Reshape the tensor to the target shape
-        return tf.reshape(inputs, self.target_shape)
+#     def call(self, inputs):
+#         return self.reshape(inputs)
+
+# class ReshapeLayer(Layer):
+#     def __init__(self, target_shape, **kwargs):
+#         super(ReshapeLayer, self).__init__(**kwargs)
+#         self.target_shape = target_shape
+
+#     def call(self, inputs):
+#         return K.reshape(inputs, self.target_shape) 
