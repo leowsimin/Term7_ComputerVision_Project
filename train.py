@@ -12,6 +12,18 @@ checkpoint_path_regression = "checkpoints_regression"
 loss_func_mse = tf.keras.losses.MeanSquaredError()
 loss_func_bce = tf.keras.losses.BinaryCrossentropy()
 
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    try:
+        # Restrict TensorFlow to only allocate necessary GPU memory
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        print(f"Using GPU: {gpus}")
+    except RuntimeError as e:
+        print(e)
+else:
+    print("No GPU found, using CPU instead.")
+
 model = BlazePose().call()
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce])
@@ -45,6 +57,7 @@ if train_mode:
             layer.trainable = False
 # Freeze heatmap branch when training regression
 else:
+    # Freeze regression branch when training heatmap
     print("Freeze these layers:")
     for layer in model.layers:
         if layer.name.startswith("regression"):
