@@ -5,7 +5,7 @@ batch_size = 16
 total_epoch = 50
 dataset = "lsp" # "lspet"
 train_split, val_split, test_split = 0.6, 0.2, 0.2 # split
-heat_size = 128
+heat_size = 64
 
 # Train mode: 0-heatmap, 1-regression
 train_mode = 0
