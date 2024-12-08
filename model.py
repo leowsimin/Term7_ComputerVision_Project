@@ -41,6 +41,7 @@ class BlazePose():
 
         #THIS PORTION
         self.reshape_layer = tf.keras.layers.Reshape(target_shape=(-1, self.height, self.width, self.embed_dim))
+        self.conv_trans_upsampling = tf.keras.layers.UpSampling2D(size=(16, 16), interpolation="bilinear")
         self.conv1x1 = tf.keras.layers.Conv2D(24, (1, 1), activation="relu")
         
         #  ---------- Heatmap branch ----------
@@ -167,8 +168,10 @@ class BlazePose():
         reshaped_patches = reshaped_patches[:, 0, :, :, :]
         print('Reshaped size:', reshaped_patches.shape)
 
-        output = self.conv1x1(reshaped_patches)
+        upsampled_patches = self.conv_trans_upsampling(reshaped_patches)
+        print("Upsampled Shape:", upsampled_patches)
 
+        output = self.conv1x1(upsampled_patches)
         print("Output shape:", output.shape)  # (None, 128, 128, 24)
 
         # ---------- heatmap branch ----------
