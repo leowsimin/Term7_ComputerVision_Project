@@ -17,11 +17,11 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 # create formatter and add it to the handlers
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 # create file handler which logs even debug messages
-filename = f'{datetime.today().strftime('%Y_%m_%d_%H_%M_%S')}'
-fh = logging.FileHandler(f'logs/{filename}.log')
+filename = f"{datetime.today().strftime('%Y_%m_%d_%H_%M_%S')}"
+fh = logging.FileHandler(f"logs/{filename}.log")
 fh.setLevel(logging.DEBUG)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
@@ -29,8 +29,9 @@ logger.addHandler(fh)
 # log config values
 logger.info("Config:")
 for k, v in vars(config).items():
-    if k[:2] != '__':
+    if k[:2] != "__":
         logger.info(f"{k}={v}")
+
 
 # save model training + predictions logs to file
 class LogCallback(tf.keras.callbacks.Callback):
@@ -50,20 +51,23 @@ class LogCallback(tf.keras.callbacks.Callback):
         logger.info("Start predicting; got log: {}".format(logs))
 
     def on_predict_end(self, logs=None):
-        logger.info("Stop predicting; got log: {}".format(logs))    
-        
+        logger.info("Stop predicting; got log: {}".format(logs))
+
     def on_test_begin(self, logs=None):
         logger.info("Start testing; got log: {}".format(logs))
 
     def on_test_end(self, logs=None):
         logger.info("Stop testing; got log: {}".format(logs))
 
+
 keras_custom_callback = LogCallback()
+
 
 # log model archi
 def _replace_special_unicode_character(message):
     message = str(message).replace("━", "=")  # Fall back to Keras2 behavior.
     return message
+
 
 def print_and_log(message, line_break=True):
     message = str(message)
