@@ -23,9 +23,9 @@ loss_func_smooth_l1 = tf.keras.losses.Huber(
 loss_func_msle = tf.keras.losses.MeanSquaredLogarithmicError()
 
 model = BlazePose().call()
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 model.compile(optimizer, 
-              loss=[loss_func_smooth_l1, loss_func_mse, loss_func_bce], 
+              loss=[loss_func_mse, loss_func_mse, loss_func_bce], 
               loss_weights=[100, 0.0001, 1],
               metrics=[None, metrics.PCKMetric(), None])
 
