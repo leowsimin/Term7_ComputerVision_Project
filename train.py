@@ -29,7 +29,11 @@ checkpoint_path_regression = "checkpoints_regression"
 loss_func_mse = tf.keras.losses.MeanSquaredError()
 loss_func_bce = tf.keras.losses.BinaryCrossentropy()
 
+
 model = BlazePose().call()
+lr_schedule = tf.keras.callbacks.LearningRateScheduler(
+    lambda epoch: 0.0005 * (0.5 ** (epoch // 10))
+)
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
 
 if pretrain:
@@ -38,7 +42,7 @@ if pretrain:
     model.compile(
         optimizer=optimizer,
         loss=[loss_func_bce, loss_func_mse, loss_func_bce],
-        loss_weights=[0.6, 0.2, 0.2],  # majority loss is heatmap loss
+        loss_weights=[0.8999, 0.0001, 0.1],  # majority loss is heatmap loss
         metrics=[None, metrics.PCKMetric(), None],
     )
 else:
@@ -135,7 +139,7 @@ try:
         batch_size=batch_size,
         epochs=total_epoch,
         validation_data=(x_val, y_val),
-        callbacks=[mc, logger.keras_custom_callback],
+        callbacks=[mc, logger.keras_custom_callback, lr_schedule],
         shuffle=True,
         verbose=1,
     )
