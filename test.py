@@ -44,7 +44,7 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
 if use_existing_model_weights:
     if pretrain:
-        weight_filepath = "checkpoints_heatmap_lspet/best_model.weights.h5"
+        weight_filepath = "checkpoints_heatmap_lspet/models/best_model.weights.h5"
     else:
         weight_filepath = "model.weights.h5"
 else:

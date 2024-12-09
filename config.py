@@ -1,15 +1,15 @@
 num_joints = 14  # lsp dataset
-num_images = 2000  # above 400, below 2000
+num_images = 10000  # above 400, below 2000
 
-batch_size = 50
+batch_size = 200
 total_epoch = 100
-dataset = "lsp"  # "lsp"
+dataset = "lspet"  # "lsp"
 train_split, val_split, test_split = 0.6, 0.2, 0.2  # split
 heat_size = 128
 
 # Train mode: 0-heatmap, 1-regression
-train_mode = 1
-pretrain = 0  # set to 1 to pretrain on lspet
+train_mode = 0
+pretrain = 1  # set to 1 to pretrain on lspet
 
 # Eval mode: 0-output image, 1-pck score
 eval_mode = 1

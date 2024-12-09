@@ -26,47 +26,43 @@ import utils.logger as logger
 
 checkpoint_path_heatmap = "checkpoints_heatmap_lspet"
 checkpoint_path_regression = "checkpoints_regression"
-loss_func_mse = tf.keras.losses.MeanSquaredError()
-loss_func_bce = tf.keras.losses.BinaryCrossentropy()
-
 
 model = BlazePose().call()
-lr_schedule = tf.keras.callbacks.LearningRateScheduler(
-    lambda epoch: 0.0005 * (0.5 ** (epoch // 10))
-)
+# lr_schedule = tf.keras.callbacks.LearningRateScheduler(
+#     lambda epoch: 0.0005 * (0.5 ** (epoch // 10))
+# )
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
 
-if pretrain:
-    # NOTE: FOR PRETRAINING ON LSPET
-    print("Pretraining:")
-    model.compile(
-        optimizer=optimizer,
-        loss=[loss_func_bce, loss_func_mse, loss_func_bce],
-        loss_weights=[0.8999, 0.0001, 0.1],  # majority loss is heatmap loss
-        metrics=[None, metrics.PCKMetric(), None],
-    )
-else:
-    model.compile(
-        optimizer,
-        loss=[loss_func_bce, loss_func_mse, loss_func_bce],
-        metrics=[None, metrics.PCKMetric(), None],
-    )
+model.compile(
+    optimizer=optimizer,
+    loss=[
+        lambda y_true, y_pred: metrics.masked_bce_loss(
+            y_true, y_pred, tf.gather(y_train[2], tf.range(tf.shape(y_true)[0]))
+        ),  # Pass batch-specific visibility to heatmap loss
+        lambda y_true, y_pred: metrics.masked_mse_loss(
+            y_true, y_pred, tf.gather(y_train[2], tf.range(tf.shape(y_true)[0]))
+        ),  # Pass batch-specific visibility to coordinate loss
+        tf.keras.losses.BinaryCrossentropy(),  # Visibility prediction loss
+    ],
+    metrics=[None, metrics.PCKMetric(), None],  # Metrics for regression only
+)
 
 
 if train_mode:
     checkpoint_path = checkpoint_path_regression
 else:
     checkpoint_path = checkpoint_path_heatmap
+
 pathlib.Path(checkpoint_path).mkdir(parents=True, exist_ok=True)
 
 # Optimize RAM for GPU if exist
-gpus = tf.config.experimental.list_physical_devices("GPU")
-if gpus:
-    try:
-        for gpu in gpus:
-            tf.config.experimental.set_memory_growth(gpu, True)
-    except RuntimeError as e:
-        print(e)
+# gpus = tf.config.experimental.list_physical_devices("GPU")
+# if gpus:
+#     try:
+#         for gpu in gpus:
+#             tf.config.experimental.set_memory_growth(gpu, True)
+#     except RuntimeError as e:
+#         print(e)
 
 # continue train
 if continue_train > 0:
@@ -133,13 +129,16 @@ try:
             verbose=1,
         )
 
+    # print("fitting model")
+    # print("x_train shape:", x_train.shape)
+    # print("y_train shape:", y_train[0].shape, y_train[1].shape, y_train[2].shape)
     model.fit(
         x=x_train,
         y=y_train,
         batch_size=batch_size,
         epochs=total_epoch,
         validation_data=(x_val, y_val),
-        callbacks=[mc, logger.keras_custom_callback, lr_schedule],
+        callbacks=[mc, logger.keras_custom_callback],
         shuffle=True,
         verbose=1,
     )
@@ -153,24 +152,6 @@ try:
     print("Test PCK score:", res[-1])
     # mlflow.log_metrics({"test_coordinates_pck": res[-1]})
 
-    # model.summary(print_fn=logger.print_and_log, show_trainable=True)
-    # tf.keras.utils.plot_model(model, to_file='/tmp/model_architecture.png', show_shapes=True, show_layer_activations=True, show_trainable=True)
-    # mlflow.log_artifact('/tmp/model_architecture.png')
-
-    if pretrain:
-        image_files = draw_images(model, img_idxs=img_idxs_lspet)
-        image_files = draw_heatmaps(model, img_idxs=img_idxs_lspet)
-        image_files = draw_images(model, img_idxs=img_idxs_lsp)
-        image_files = draw_heatmaps(model, img_idxs=img_idxs_lsp)
-    else:
-        image_files = draw_images(model, img_idxs=img_idxs_lsp)
-        # for image_file in image_files:
-        #     mlflow.log_artifact(image_file)
-
-        image_files = draw_heatmaps(model, img_idxs=img_idxs_lsp)
-        # for image_file in image_files:
-        # mlflow.log_artifact(image_file)
-
     if (
         train_mode > 0
     ):  # if regression mode -> model prbl quite good -> save model weights
@@ -178,7 +159,6 @@ try:
         newest_weight_file = os.path.join(
             model_folder_path, f"model_ep{total_epoch:02d}.weights.h5"
         )
-        # mlflow.log_artifact(newest_weight_file)
 
     print("Finish training.")
 except Exception as ex:
