@@ -47,7 +47,7 @@ else:
         model.load_weights(os.path.join(checkpoint_path_heatmap, "models/{}".format(best_pre_train_filename)))
 
 # Define the callbacks
-if continue_train_from_filename:
+if continue_train > 0:
     model_folder_path = os.path.join(checkpoint_path, f"models_1")
     pathlib.Path(model_folder_path).mkdir(parents=True, exist_ok=True)
     mc = tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(

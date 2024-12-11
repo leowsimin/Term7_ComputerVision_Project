@@ -5,7 +5,8 @@ import numpy as np
 import pathlib
 from model import BlazePose
 from config import epoch_to_test, eval_mode, dataset, use_existing_model_weights, pck_metric, batch_size, img_idxs
-from data import x_test, y_test
+from data import x_test, y_test, x_train, y_train, x_val, y_val
+from utils import visualize
 from utils.draw import draw_images, draw_heatmaps
 import utils.logger as logger
 import utils.experiment_tracker
@@ -36,6 +37,12 @@ model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], met
 
 print("Load regression weights", weight_filepath)
 model.load_weights(weight_filepath)
+
+# visualize.visualize(model, "conv2d", 24)
+# visualize.visualize(model, "blaze_block", 36)
+# visualize.visualize(model, "blaze_block_1", 36)
+# visualize.visualize(model, "blaze_block_2", 36)
+# visualize.visualize(model, "blaze_block_3", 36)
 
 res = model.evaluate(x=x_test, y=y_test, batch_size=batch_size, callbacks=[logger.keras_custom_callback])       
 print("Test PCK score:", res[-1])
