@@ -39,6 +39,25 @@ def getGaussianMap(joint=(16, 16), heat_size=128, sigma=2):
     ]
     return heatmap
 
+joint_names_dict = {
+    0: "Right ankle",
+    1: "Right knee",
+    2: "Right hip",
+    3: "Left hip",
+    4: "Left knee",
+    5: "Left ankle",
+    6: "Right wrist",
+    7: "Right elbow",
+    8: "Right shoulder",
+    9: "Left shoulder",
+    10: "Left elbow",
+    11: "Left wrist",
+    12: "Neck",
+    13: "Head top"
+}
+
+joint_order = [5, 0, 4, 1, 3, 2, 11, 6, 10, 7, 9, 8, 12, 13]
+
 
 # read annotations
 annotations = loadmat("./dataset/" + dataset + "/joints.mat")
