@@ -160,6 +160,39 @@ class TransformerBlock(tf.keras.layers.Layer):
         return x + mlp_output
 
 
+class CBAM(tf.keras.layers.Layer):
+    def __init__(self, reduction_ratio=16):
+        super(CBAM, self).__init__()
+        self.reduction_ratio = reduction_ratio
+
+    def build(self, input_shape):
+        # Channel attention
+        self.global_avg_pool = GlobalAveragePooling2D()
+        self.global_max_pool = GlobalMaxPooling2D()
+        self.shared_dense1 = Dense(
+            input_shape[-1] // self.reduction_ratio, activation="relu"
+        )
+        self.shared_dense2 = Dense(input_shape[-1], activation="sigmoid")
+
+        # Spatial attention
+        self.conv_spatial = Conv2D(
+            1, kernel_size=7, strides=1, padding="same", activation="sigmoid"
+        )
+
+    def call(self, inputs):
+        # Channel attention
+        avg_out = self.shared_dense2(self.shared_dense1(self.global_avg_pool(inputs)))
+        max_out = self.shared_dense2(self.shared_dense1(self.global_max_pool(inputs)))
+        channel_attention = multiply([inputs, avg_out + max_out])
+
+        # Spatial attention
+        avg_pool = tf.reduce_mean(channel_attention, axis=-1, keepdims=True)
+        max_pool = tf.reduce_max(channel_attention, axis=-1, keepdims=True)
+        spatial_attention = self.conv_spatial(tf.concat([avg_pool, max_pool], axis=-1))
+
+        return multiply([channel_attention, spatial_attention])
+
+
 # class MyLayer(tf.keras.layers.Layer):
 #     def __init__(self):
 #         super(MyLayer, self).__init__()
