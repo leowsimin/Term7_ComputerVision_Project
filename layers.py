@@ -58,7 +58,7 @@ class PatchEmbedding(tf.keras.layers.Layer):
         # Reshape patches to (batch_size, num_patches, patch_dim)
         num_patches_height = height // patch_height
         num_patches_width = width // patch_width
-        patch_dim = patch_height * patch_width * channels  # Flattened patch size
+        patch_dim = patch_height * patch_width * channels # Flattened patch size
         patches = tf.reshape(patches, [batch_size, num_patches_height * num_patches_width, patch_dim])
         
         # Project each patch to embed_dim using the Dense layer
@@ -74,6 +74,8 @@ class PositionalEmbedding(tf.keras.layers.Layer):
         )
 
     def call(self, patch_embeddings):
+        print("Patch Emdding:", patch_embeddings)
+        print("Positional Embedding:", self.positional_embedding)
         return patch_embeddings + self.positional_embedding
 
 class MultiHeadSelfAttention(tf.keras.layers.Layer):
@@ -113,14 +115,14 @@ class TransformerBlock(tf.keras.layers.Layer):
         mlp_output = self.mlp(self.norm2(x))
         return x + mlp_output ## NOTE the output size: (np, D)
     
-class MyLayer(tf.keras.layers.Layer):
-    def __init__(self):
-        super(MyLayer, self).__init__()
+# class MyLayer(tf.keras.layers.Layer):
+#     def __init__(self):
+#         super(MyLayer, self).__init__()
 
-    def call(self, x):
-        # Example operation (replace this with your actual operation)
-        # Ensuring that x is correctly processed as a Keras tensor
-        return tf.reshape(x, (-1, 64, 64, 24))  # Example reshaping
+#     def call(self, x):
+#         # Example operation (replace this with your actual operation)
+#         # Ensuring that x is correctly processed as a Keras tensor
+#         return tf.reshape(x, (-1, 64, 64, 24))  # Example reshaping
     
 # class ReshapeLayer(Layer):
 #     def __init__(self, target_shape, **kwargs):

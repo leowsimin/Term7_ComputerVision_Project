@@ -9,28 +9,13 @@ class BlazePose():
             filters=24, kernel_size=3, strides=(2, 2), padding='same', activation='relu',
             kernel_regularizer=tf.keras.regularizers.L2(l2_reg)
         )
-         
-        # separable convolution (MobileNet)
-        self.conv2_1 = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None,   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
-        ])
-        self.conv2_2 = tf.keras.models.Sequential([
-            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-            tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None,   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
-        ])
-
-        #  ---------- DownSampling ----------
-        
-        self.downsampling_layer_1 = tf.keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))
-        # self.downsampling_layer_2 = tf.keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))
 
         #  ---------- ViT Transformer ----------
         self.num_transformer_layers = 6
 
-        self.patch_size = (8, 8)
-        self.num_patches = (64 // self.patch_size[0]) * (64 // self.patch_size[1]) #64 patches
-        self.height = self.width = int(self.num_patches**0.5) #8
+        self.patch_size = (4, 4)
+        self.num_patches = (256 // self.patch_size[0]) * (256 // self.patch_size[1]) #4096 patches
+        self.height = self.width = int(self.num_patches**0.5) #64
         self.embed_dim = 128
 
         self.patch_embedding_layer = PatchEmbedding(self.patch_size, self.embed_dim)
@@ -42,15 +27,28 @@ class BlazePose():
 
         self.transformer_block = TransformerBlock(embed_dim=self.embed_dim, num_heads=self.num_heads, mlp_hidden_dim=self.mlp_hidden_dim)
 
-        # self.reshaped_fn = Reshape((-1, 8, 8, 128))
-
-        #THIS PORTION
+         #THIS PORTION
         self.reshape_layer = tf.keras.layers.Reshape(target_shape=(-1, self.height, self.width, self.embed_dim))
-        self.conv_trans_upsampling = tf.keras.layers.UpSampling2D(size=(8, 8), interpolation="bilinear")
-        self.conv1x1 = tf.keras.layers.Conv2D(48, (1, 1), activation="relu")
+        self.conv_trans_upsampling = tf.keras.layers.UpSampling2D(size=(2, 2), interpolation="bilinear")
+        self.conv1x1 = tf.keras.layers.Conv2D(24, (1, 1), activation="relu")
+
+        self.concat_layer = tf.keras.layers.Concatenate()
+
+        self.conv_reduce_channels = tf.keras.layers.Conv2D(filters=24, kernel_size=1, padding='same')
+
+        # separable convolution (MobileNet)
+        self.conv2_1 = tf.keras.models.Sequential([
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None,   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
+        ])
+        
+        self.conv2_2 = tf.keras.models.Sequential([
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding='same', activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=24, kernel_size=1, activation=None,   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
+        ])
         
         #  ---------- Heatmap branch ----------
-        # self.conv3 = BlazeBlock(block_num = 3, channel = 48)    # input res: 128
+        self.conv3 = BlazeBlock(block_num = 3, channel = 48)    # input res: 128
         self.conv4 = BlazeBlock(block_num = 4, channel = 96)    # input res: 64
         self.conv5 = BlazeBlock(block_num = 5, channel = 192)   # input res: 32
         self.conv6 = BlazeBlock(block_num = 6, channel = 288)   # input res: 16
@@ -78,16 +76,16 @@ class BlazePose():
         ])
 
 
-        # self.conv10a = tf.keras.models.Sequential([
-        #     tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-        #     tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
-        #     tf.keras.layers.UpSampling2D(size=(2, 2), interpolation="bilinear"
-        #     )
-        # ])
-        # self.conv10b = tf.keras.models.Sequential([
-        #     tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
-        #     tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
-        # ])
+        self.conv10a = tf.keras.models.Sequential([
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.UpSampling2D(size=(2, 2), interpolation="bilinear"
+            )
+        ])
+        self.conv10b = tf.keras.models.Sequential([
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
+        ])
 
         # the output layer for heatmap and offset
         self.conv11 = tf.keras.models.Sequential([
@@ -141,27 +139,9 @@ class BlazePose():
 
     def call(self):
         input_x = tf.keras.layers.Input(shape=(256, 256, 3)) #Keras symbolic tensor
-
-        # shape = (1, 256, 256, 3)
-        x = self.conv1(input_x)
-        print(f"X after conv1 --> {x.shape}")
-        # shape = (1, 128, 128, 24)
-        x = x + self.conv2_1(x)   # <-- skip connection
-        # x = tf.keras.activations.relu(x)
-        print(f"X after conv_2_1 --> {x.shape}")
-        x = x + self.conv2_2(x)
-        print(f"X after conv_2_2 --> {x.shape}")
-        # y0 = tf.keras.activations.relu(x)
-
-        # ---------- DownSampling ----------
-
-        x = self.downsampling_layer_1(x)
-        print(f"X after Downsampling 1 --> {x.shape}")
-        # x = self.downsampling_layer_2(x)
-        # print(f"X after Downsampling 2 --> {x.shape}")
-
+        
         # ---------- ViT Transformer ----------
-        embedded_patches = self.patch_embedding_layer(x)
+        embedded_patches = self.patch_embedding_layer(input_x)
         print("Shape of embedded patches:", embedded_patches.shape)
 
         embedded_patches_with_position = self.positional_embedding_layer(embedded_patches)
@@ -171,12 +151,8 @@ class BlazePose():
         for _ in range(self.num_transformer_layers):  # Stack multiple layers
             transformer_output = self.transformer_block(transformer_output)
         print("Shape after stacking Transformer Blocks:", transformer_output.shape)
-        
-        ## FIX THIS PORTION.
-        # Reshaping the patches into a 2D grid (e.g., 8x8 grid for 64 patches)
-        # transformer_output: Keras Symbolic Tensor
 
-        # print("transformer_output type:", type(transformer_output))
+        #Reshaping to add this feature --> Reshape (1, 64, 128) --> (128, 128, 24)
         reshaped_patches = self.reshape_layer(transformer_output)
         reshaped_patches = reshaped_patches[:, 0, :, :, :]
         print('Reshaped size:', reshaped_patches.shape)
@@ -185,12 +161,33 @@ class BlazePose():
         print("Upsampled Shape:", upsampled_patches)
 
         output = self.conv1x1(upsampled_patches)
-        print("Output shape:", output.shape)  # (None, 64, 64, 48)
+        print("Output shape:", output.shape)  # (None, 128, 128, 24)
+
+        # ---------- CNN Path ----------
+        # shape = (1, 256, 256, 3)
+        x = self.conv1(input_x)
+        print(f"X after conv1 --> {x.shape}") 
+
+        # ---------- Combine ViT and CNN Features ----------
+        combined_features = self.concat_layer([x, output])  # Concatenate along the channel dimension
+        print("Combined Feature Shape:", combined_features.shape)
+
+        combined_features_reduced = self.conv_reduce_channels(combined_features)
+        print("Combined Feature Reduced Shape:", combined_features_reduced.shape)
+        # ---------- Skip Connections ----------
+        # shape = (1, 128, 128, 24)
+        x = x + self.conv2_1(combined_features_reduced)   # <-- skip connection
+        # x = tf.keras.activations.relu(x)
+        print(f"X after conv_2_1 --> {x.shape}")
+
+        x = x + self.conv2_2(output)
+        print(f"X after conv_2_2 --> {x.shape}")
+        # y0 = tf.keras.activations.relu(x)
 
         # ---------- heatmap branch ----------
         # shape = (1, 128, 128, 24)
-        y1 = output
-        # y1 = self.conv3(y0) # output res: 64
+        y0 = x
+        y1 = self.conv3(y0) # output res: 64
         # print(f"Y1 shape --> {y1.shape}")
         y2 = self.conv4(y1) # output res:  32
         y3 = self.conv5(y2) # output res:  16
@@ -206,10 +203,9 @@ class BlazePose():
         x = self.conv9a(x) + self.conv9b(y1)
         print(f"X conv9a conv9b --> {x.shape}")
         # shape = (1, 64, 64, 48)
-        # y =  self.conv10a(x) + self.conv10b(y1) #x
-        y = x
+        y =  self.conv10a(x) + self.conv10b(y0) #x
         # print("After heatmap:", y.shape)
-        #y = self.cbam10(y)
+
         # shape = (1, 128, 128, 8)
         heatmap = tf.keras.activations.sigmoid(self.conv11(y))
         print(f"Heatmap layer shape: {heatmap.shape}")
