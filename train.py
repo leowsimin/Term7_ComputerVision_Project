@@ -25,8 +25,8 @@ loss_func_msle = tf.keras.losses.MeanSquaredLogarithmicError()
 model = BlazePose().call()
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 model.compile(optimizer, 
-              loss=[loss_func_mse, loss_func_mse, loss_func_bce], 
-              loss_weights=[100, 0.0001, 1],
+              loss=[loss_func_smooth_l1, loss_func_mse, loss_func_bce], 
+              loss_weights=[100, 0.0001, 0.1],
               metrics=[None, metrics.PCKMetric(), None])
 
 if train_mode:
@@ -51,11 +51,11 @@ if continue_train > 0:
     model.load_weights(os.path.join(model_folder_path, "{}".format(continue_train_from_filename)))
 else:
     if train_mode:
-        print("Load heatmap weights", os.path.join(checkpoint_path_heatmap, "models/{}".format(best_pre_train_filename)))
-        model.load_weights(os.path.join(checkpoint_path_heatmap, "models/{}".format(best_pre_train_filename)))
+        print("Load heatmap weights", os.path.join(checkpoint_path_heatmap, "models_1/{}".format(best_pre_train_filename)))
+        model.load_weights(os.path.join(checkpoint_path_heatmap, "models_1/{}".format(best_pre_train_filename)))
 
 # Define the callbacks
-if continue_train:
+if continue_train > 0:
     model_folder_path = os.path.join(checkpoint_path, f"models_1")
     pathlib.Path(model_folder_path).mkdir(parents=True, exist_ok=True)
     mc = tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(
@@ -100,9 +100,9 @@ try:
     # tf.keras.utils.plot_model(model, to_file='/tmp/model_architecture.png', show_shapes=True, show_layer_activations=True, show_trainable=True)
     # mlflow.log_artifact('/tmp/model_architecture.png')
 
-    image_files = draw_images(model, img_idxs=img_idxs)
-    for image_file in image_files:
-        mlflow.log_artifact(image_file)
+    # image_files = draw_images(model, img_idxs=img_idxs)
+    # for image_file in image_files:
+    #     mlflow.log_artifact(image_file)
 
     image_files = draw_heatmaps(model, img_idxs=img_idxs)
     for image_file in image_files:
