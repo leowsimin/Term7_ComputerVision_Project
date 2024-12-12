@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import time  # Import for measuring processing time
 
 from base_model import BlazePose
-from config import epoch_to_test
+from config import epoch_to_test, input_video_path, output_video_path
 
 # Set parameters
 checkpoint_path_regression = "checkpoints_regression"
@@ -23,10 +23,10 @@ print("Load regression weights", os.path.join(checkpoint_path_regression, "model
 model.load_weights(weight_filepath)
 
 # Input and output video paths
-video_file_path = "test_video_1.mp4"
+video_file_path = input_video_path
 video = cv2.VideoCapture(video_file_path)
 
-result_video_path = "./output_video.mp4"
+result_video_path = output_video_path
 
 if not video.isOpened():
     print("Error: Could not open the video file.")

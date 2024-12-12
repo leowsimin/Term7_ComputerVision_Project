@@ -30,3 +30,7 @@ This is a third-party implementation of BlazePose in Tensorflow from [alishsuper
 ### Train/finetune model
 
 In `config.py`, modify `use_existing_model_weights = 0`. Then refer to `README_OG.md`.
+
+### Video processing from trained model
+After training the model, in `config.py` modify the `input_video_path` and `output_video_path` parameters.
+Run `video_processor.py` 
