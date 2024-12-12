@@ -43,29 +43,21 @@ Head top
 ![image](https://user-images.githubusercontent.com/14852495/156510922-5d962d87-e021-4a3f-9c67-3afbd168a022.png)
 
 ## Train
-1. Pre-train the heatmap branch.
-    Edit training settings in `config.py`. Set `train_mode = 0`.
-    Then, run `python train.py`.
-    
-2. Fine-tune for the joint regression branch.
-    Set `train_mode = 1` and `best_pre_train` with the num of epoch where the training loss drops but testing accuracy achieve the optimal.
-    Then, run `python train.py`.
+1. Pre-train the heatmap branch and the regression branch.
+  run `python train.py`.
 
 ## Test
-1. Set `epoch_to_test` to the epoch you would like to test.
+1. Set `epoch_to_test` to the epoch you would like to test in config.py.
 
 2. Run `python test.py`.
 
 ## Performance Comparison
-| Model                                                | LSP Dataset <br /> Train - 1000 images <br /> Val - 1000 images              | LSPet Dataset |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------- | ------------- |
-| Only Linear (x, y, v)                                | PCK Score – 36.53% <br /> Train MSE Loss - 7.19 <br /> Val MSE Loss – 742.19 | |
-| Linear (x, y) + Sigmoid (v) (Concatenate two layers) | PCK Score – 38.6% <br /> Train MSE Loss - 1.05 <br /> Val MSE Loss – 705.67  | |
-| Linear (x, y) + Sigmoid (v) (Separate two outputs)   | PCK Score – 37.74% <br /> Train MSE Los - 2.97 <br /> Val MSE Loss - 556.32  | |
+
+Base Model PCK: 0.58
+ViT Model PCK: 
+
 
 ## Reference
-
-If the original paper helps your research, you can cite this paper in the LaTex file with:
 
 ```tex
 @article{Bazarevsky2020BlazePoseOR,
