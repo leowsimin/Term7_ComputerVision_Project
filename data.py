@@ -10,7 +10,7 @@ from config import (
     val_split,
     test_split,
     heat_size,
-    negative_joint_factor
+    negative_joint_factor,
 )
 
 # import mlflow
