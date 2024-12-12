@@ -1,6 +1,6 @@
 import pathlib, cv2
 import numpy as np
-from data import data, coordinates, heatmap_set, visibility
+from data import data, coordinates, heatmap_set, visibility, joint_names_dict, joint_order
 
 def draw_images(model, img_idxs: list[int]):  
     pathlib.Path("result").mkdir(parents=True, exist_ok=True)
@@ -68,6 +68,37 @@ def draw_heatmaps(model, img_idxs: list[int]):
             plt.title(f'keypoint {kp+1}', fontsize=40)
 
         filename = "./result/lsp_%d_heatmap.png"%t
+        plt.savefig(filename, bbox_inches='tight')
+        filenames.append(filename)
+    return filenames
+
+def draw_images_separate_joint(model, img_idxs: list[int]):  
+    pathlib.Path("result").mkdir(parents=True, exist_ok=True)
+    # GENERATE RESULT IMAGES
+    filenames = []
+    for t in img_idxs:
+        fig = plt.figure(figsize=(56, 56))
+        _, preds, _ = model.predict(data[t:t+1])
+        gt_skeleton = coordinates[t].astype(np.uint8)  
+        pred_skeleton = preds[0].astype(np.uint8)
+        img = data[t].astype(np.uint8)
+
+        i = 0        
+        for kp in joint_order[:6]:
+            new_img = np.array(img)
+            cv2.circle(new_img, center=tuple(gt_skeleton[kp][0:2]), radius=2, color=(0, 255, 0), thickness=2)
+            cv2.circle(new_img, center=tuple(pred_skeleton[kp][0:2]), radius=2, color=(255,0,0), thickness=2)
+
+            cv2.putText(new_img, 'green = gt', (130,230), 1, 0.8, color=(0,255,0), thickness=1)
+            cv2.putText(new_img, 'red = predicted', (130,245), 1, 0.8, color=(255,0,0), thickness=1)
+            plt.subplot(1, 6, i+1)
+            plt.imshow(new_img)
+            plt.axis('off')
+            plt.title(f'{joint_names_dict[kp]}', fontsize=40)
+
+            i += 1
+
+        filename = "./result/lsp_%d_separate_joint.png"%t
         plt.savefig(filename, bbox_inches='tight')
         filenames.append(filename)
     return filenames

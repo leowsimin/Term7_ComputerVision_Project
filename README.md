@@ -14,7 +14,7 @@ The following link is the blazepose research paper:  https://arxiv.org/abs/2006.
 
 ## Implementation
 
-This is a third-party implementation of BlazePose in Tensorflow from [alishsuper/BlazePose-Implementation](https://github.com/alishsuper/BlazePose-Implementation?tab=readme-ov-file). 
+This is an experimental adaptation of BlazePose in Tensorflow from [alishsuper/BlazePose-Implementation](https://github.com/alishsuper/BlazePose-Implementation?tab=readme-ov-file). 
 
 ### Setup
 
