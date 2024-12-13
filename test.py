@@ -48,7 +48,7 @@ def load_model():
         model = VIT2_BlazePose().call()
     elif select_model == 5:
         print("Using HEATMAP_BlazePose")
-        weight_filepath = "HEATMAP_model.weights.h5"
+        weight_filepath = "HEATMAP_best_model.weights.h5"
         model = HEATMAP_BlazePose().call()
     else:
         weight_filepath = "base_model.weights.h5"
