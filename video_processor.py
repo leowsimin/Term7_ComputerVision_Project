@@ -7,6 +7,8 @@ import time  # Import for measuring processing time
 
 from base_model import BlazePose
 from config import epoch_to_test, input_video_path, output_video_path, select_model
+from utils import metrics
+from utils.losses import loss_func_bce_negative_joint
 
 # Set parameters
 checkpoint_path_regression = "checkpoints_regression"
@@ -17,7 +19,10 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 # Load model and weights
 weight_filepath = "model.weights.h5"  # Replace with the correct weight file path
 model = BlazePose().call()
-model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce])
+if select_model == 5:
+    model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce, loss_func_bce_negative_joint], metrics=[None, metrics.PCKMetric(), None, None])
+else:
+    model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce])
 
 print("Load regression weights", os.path.join(checkpoint_path_regression, "models/model_ep{}.weights.h5".format(epoch_to_test)))
 model.load_weights(weight_filepath)
