@@ -10,6 +10,8 @@ from utils.draw import draw_heatmaps, draw_images
 import utils.logger as logger
 import utils.experiment_tracker as experiment_tracker
 import mlflow
+import keras
+from keras import backend as K
 
 checkpoint_path_heatmap = "checkpoints_heatmap"
 checkpoint_path_regression = "checkpoints_regression"
@@ -22,12 +24,42 @@ loss_func_smooth_l1 = tf.keras.losses.Huber(
 )
 loss_func_msle = tf.keras.losses.MeanSquaredLogarithmicError()
 
+def loss_func_bce_negative_joint(y_true, y_pred):
+    # y_pred = tf.clip_by_value(y_pred, tf.keras.backend.epsilon(), 1 - tf.keras.backend.epsilon())
+    epsilon = tf.keras.backend.epsilon()
+    term_0 = (1 - y_true) * tf.math.log(y_pred + epsilon)  # Cancels out when target is 1 
+    term_1 = y_true * tf.math.log(1 - y_pred + epsilon) # Cancels out when target is 0
+    bce = -(term_0 + term_1)
+    loss_only_at_joint = tf.where(tf.greater(y_true, 0), bce * 1, bce * 0)
+    return 10 * (tf.reduce_mean(loss_only_at_joint))
+
+def loss_func_bce_ori(y_true, y_pred):
+    # y_pred = tf.clip_by_value(y_pred, tf.keras.backend.epsilon(), 1 - tf.keras.backend.epsilon())
+    epsilon = tf.keras.backend.epsilon()
+    term_0 = (1 - y_true) * tf.math.log(1 - y_pred + epsilon)  # Cancels out when target is 1 
+    term_1 = y_true * tf.math.log(y_pred + epsilon) # Cancels out when target is 0
+    bce = -(term_0 + term_1)
+    loss_only_at_joint = bce * 1
+    return 10 * (tf.reduce_mean(loss_only_at_joint))
+
+def loss_func_mse_negative_joint(y_true, y_pred):
+    mse = tf.square(y_true - (1 - y_pred))
+    loss_only_at_joint = tf.where(tf.greater(y_true, 0), mse * 1, mse * 0)
+    return 10 * tf.reduce_mean(loss_only_at_joint)
+
+def loss_func_negative_joint(y_true, y_pred):
+    epsilon = tf.keras.backend.epsilon()
+    loss = tf.square(y_pred)
+    loss_only_at_joint = tf.where(tf.greater(y_true, 0), loss * 1, loss * 0)
+    res = 1 * tf.reduce_mean(loss_only_at_joint)
+    return tf.keras.ops.clip(res, epsilon, res)
+
 model = BlazePose().call()
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 model.compile(optimizer, 
-              loss=[loss_func_smooth_l1, loss_func_mse, loss_func_bce], 
-              loss_weights=[100, 0.0001, 0.1],
-              metrics=[None, metrics.PCKMetric(), None])
+              loss=[loss_func_mse, loss_func_mse, loss_func_bce, loss_func_bce_negative_joint], 
+              loss_weights=[10, 0.0001, 0.1, 10],
+              metrics=[None, metrics.PCKMetric(), None, None])
 
 if train_mode:
     checkpoint_path = checkpoint_path_regression

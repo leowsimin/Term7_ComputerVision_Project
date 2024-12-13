@@ -65,6 +65,13 @@ class BlazePose():
             tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
             # heatmap
             tf.keras.layers.Conv2D(filters=num_joints, kernel_size=3, padding="same", activation=None,   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
+        ])        
+        
+        self.conv11b = tf.keras.models.Sequential([
+            tf.keras.layers.DepthwiseConv2D(kernel_size=3, padding="same", activation=None,   depthwise_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            tf.keras.layers.Conv2D(filters=8, kernel_size=1, activation="relu",   kernel_regularizer=tf.keras.regularizers.L2(l2_reg)),
+            # heatmap
+            tf.keras.layers.Conv2D(filters=num_joints, kernel_size=3, padding="same", activation=None,   kernel_regularizer=tf.keras.regularizers.L2(l2_reg))
         ])
 
         # ---------- Regression branch ----------
@@ -138,7 +145,9 @@ class BlazePose():
         # shape = (1, 64, 64, 48)
         y = self.conv10a(x) + self.conv10b(y0)
         # shape = (1, 128, 128, 8)
-        heatmap = tf.keras.activations.tanh(self.conv11(y))
+        y = self.conv11(y)
+        heatmap = tf.keras.activations.sigmoid(y)
+        negative_heatmap = tf.keras.activations.sigmoid(y)
 
         # Stop gradient for regression
         x = tf.keras.ops.stop_gradient(x)
@@ -159,6 +168,6 @@ class BlazePose():
         # using linear + sigmoid
         coordinates = self.conv16(x)
         visibility = self.conv17(x)
-        result = [heatmap, coordinates, visibility]
+        result = [heatmap, coordinates, visibility, negative_heatmap]
 
         return tf.keras.Model(inputs=input_x, outputs=result)

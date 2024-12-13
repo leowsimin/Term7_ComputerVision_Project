@@ -1,7 +1,7 @@
 num_joints = 14     # lsp dataset
 num_images = 2000 # above 400, below 2000
 
-batch_size = 16
+batch_size = 8
 total_epoch = 75
 dataset = "lsp" # "lspet"
 train_split, val_split, test_split = 0.6, 0.2, 0.2 # split
@@ -18,7 +18,7 @@ img_idxs=[1800, 1906, 1981, 1995] # which images to draw when predicting
 
 continue_train = 0
 continue_train_from_filename = "model_ep20.weights.h5"
-best_pre_train_filename = "model_ep55.weights.h5"
+best_pre_train_filename = "model_ep49.weights.h5"
 
 # for test only
 epoch_to_test = 55

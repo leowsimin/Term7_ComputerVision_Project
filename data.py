@@ -11,6 +11,7 @@ from config import (
     test_split,
     heat_size,
     negative_joint_factor,
+    img_idxs
 )
 
 # import mlflow
@@ -56,7 +57,8 @@ joint_names_dict = {
     12: "Neck",
     13: "Head top"
 }
-
+# e.g. right ankle: left ankle
+negative_joint_dict = {0: 5, 1: 4, 2:3, 6: 11, 7: 10, 8: 9, 12: None, 13: None, 5: 0, 4: 1, 3: 2, 11: 6, 10: 7, 9: 8}
 joint_order = [5, 0, 4, 1, 3, 2, 11, 6, 10, 7, 9, 8, 12, 13]
 
 
@@ -82,6 +84,9 @@ data = np.zeros([number_images, 256, 256, 3])
 heatmap_set = np.zeros(
     (number_images, heat_size, heat_size, num_joints), dtype=np.float32
 )
+negative_heatmap_set = np.zeros(
+    (number_images, heat_size, heat_size, num_joints), dtype=np.float32
+)
 print("Reading dataset...")
 for i in range(number_images):
     if dataset == "lsp":
@@ -104,7 +109,7 @@ for i in range(number_images):
         heatmaps[j] = heatmaps.get(j, getGaussianMap(joint = _joint, heat_size = heat_size, sigma = 4))
 
         # apply negative values for opposing joint
-        if negative_joint_factor != 0 and negative_joint_dict[j] is not None:
+        if negative_joint_dict[j] is not None:
             j_neg = negative_joint_dict[j]
             if j_neg in heatmaps:
                 negative_heatmap = heatmaps.get(j_neg)
@@ -112,9 +117,15 @@ for i in range(number_images):
                 _negative_joint = (label[i, j_neg, 0:2] // (256 / heat_size)).astype(np.uint16)
                 negative_heatmap = getGaussianMap(joint = _negative_joint, heat_size = heat_size, sigma = 4)
                 heatmaps[j_neg] = negative_heatmap
-            heatmap_set[i, :, :, j] = heatmaps[j] - negative_joint_factor * negative_heatmap
         else:
-            heatmap_set[i, :, :, j] = heatmaps[j]
+            negative_heatmap = np.zeros((heat_size, heat_size))
+    
+        heatmap_set[i, :, :, j] = heatmaps[j]
+        negative_heatmap_set[i, :, :, j] = negative_heatmap
+
+        if i in img_idxs:
+            np.savetxt(f'tmp/heatmap_gt_{i}_{j}.txt', heatmaps[j])
+            np.savetxt(f'tmp/heatmap_gt_neg_{i}_{j}.txt', negative_heatmap)
 
     # print status
 
@@ -135,18 +146,21 @@ y_train = [
     heatmap_set[train_start:train_end],
     coordinates[train_start:train_end],
     visibility[train_start:train_end],
+    negative_heatmap_set[train_start:train_end]
 ]
 x_val = data[val_start:val_end]
 y_val = [
     heatmap_set[val_start:val_end],
     coordinates[val_start:val_end],
     visibility[val_start:val_end],
+    negative_heatmap_set[val_start:val_end]
 ]
 x_test = data[test_start:test_end]
 y_test = [
     heatmap_set[test_start:test_end],
     coordinates[test_start:test_end],
     visibility[test_start:test_end],
+    negative_heatmap_set[test_start:test_end]
 ]
 
 # try:

@@ -14,7 +14,7 @@ from config import (
     img_idxs,
 )
 from data import x_test, y_test
-from utils.draw import draw_images, draw_heatmaps, draw_images_separate_joint
+from utils.draw import draw_images, draw_heatmaps, draw_images_separate, draw_images_separate_joint
 import utils.logger as logger
 
 import utils.experiment_tracker
@@ -46,18 +46,28 @@ loss_func_msle = tf.keras.losses.MeanSquaredLogarithmicError()
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
 if use_existing_model_weights:
-    weight_filepath = "checkpoints_regression/models/model_ep20.weights.h5"
+    weight_filepath = "model.weights.h5"
+    # weight_filepath = "checkpoints_regression/models/model_ep30.weights.h5"
 else:
     weight_filepath = os.path.join(
         checkpoint_path_regression,
         "models/model_ep{}_val_loss_{val_loss:.2f}.weights.h5".format(epoch_to_test),
     )
+def loss_func_bce_maximize_diff(y_true, y_pred):
+    # y_pred = tf.clip_by_value(y_pred, tf.keras.backend.epsilon(), 1 - tf.keras.backend.epsilon())
+    y_pred = 1 - y_pred
+    term_0 = (1 - y_true) * tf.math.log(1 - y_pred + tf.keras.backend.epsilon())  # Cancels out when target is 1 
+    term_1 = y_true * tf.math.log(y_pred + tf.keras.backend.epsilon()) # Cancels out when target is 0
+    bce = -(term_0 + term_1)
+    loss_only_at_joint = tf.where(tf.greater(y_true, 0), bce * 1, bce * 0)
+    return 10 * (tf.reduce_mean(loss_only_at_joint))
 
 model = BlazePose().call()
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 model.compile(optimizer, 
-              loss=[loss_func_smooth_l1, loss_func_mse, loss_func_bce], 
-              loss_weights=[100, 0.001, 1],
-              metrics=[None, metrics.PCKMetric(), None])
+              loss=[loss_func_mse, loss_func_mse, loss_func_bce, loss_func_bce_maximize_diff], 
+              loss_weights=[10, 0.0001, 0.1, 10],
+              metrics=[None, metrics.PCKMetric(), None, None])
 
 print("Load regression weights", weight_filepath)
 model.load_weights(weight_filepath)
@@ -84,15 +94,19 @@ mlflow.log_metrics({"test_coordinates_pck": res[-1]})
 # )
 # mlflow.log_artifact("/tmp/model_architecture.png")
 
-image_files = draw_images(model, img_idxs=img_idxs)
-for image_file in image_files:
-    mlflow.log_artifact(image_file)
+# image_files = draw_images(model, img_idxs=img_idxs)
+# for image_file in image_files:
+#     mlflow.log_artifact(image_file)
 
-image_files = draw_heatmaps(model, img_idxs=img_idxs)
-for image_file in image_files:
-    mlflow.log_artifact(image_file)
+# image_files = draw_heatmaps(model, img_idxs=img_idxs)
+# for image_file in image_files:
+#     mlflow.log_artifact(image_file)
 
-image_files = draw_images_separate_joint(model, img_idxs=img_idxs)
+# image_files = draw_images_separate_joint(model, img_idxs=img_idxs)
+# for image_file in image_files:
+#     mlflow.log_artifact(image_file)
+
+image_files = draw_images_separate(model, img_idxs=img_idxs)
 for image_file in image_files:
     mlflow.log_artifact(image_file)
 
