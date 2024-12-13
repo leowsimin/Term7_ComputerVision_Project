@@ -397,7 +397,7 @@ class BlazePose:
         y_intermediate = self.conv11(y)
         ycbam = self.cbam11(y_intermediate)
 
-        heatmap = tf.keras.activations.sigmoid(y_intermediate)
+        heatmap = tf.keras.activations.sigmoid(ycbam)
         print(f"Heatmap layer shape: {heatmap.shape}")
         # Stop gradient for regression
         x = tf.keras.ops.stop_gradient(x)
