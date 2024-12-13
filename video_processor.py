@@ -3,6 +3,9 @@ import os
 import tensorflow as tf
 import numpy as np
 import time
+from config import epoch_to_test, input_video_path, output_video_path, select_model
+from utils import metrics
+from utils.losses import loss_func_bce_negative_joint
 
 
 def video_processor(model: tf.keras.Model, video_file_path: str, result_video_path: str, output_video=False):
@@ -51,7 +54,10 @@ def video_processor(model: tf.keras.Model, video_file_path: str, result_video_pa
             predictions = model.predict(input_frame)
 
             if len(predictions) == 3:
-                heatmap, coordinates, visibility = predictions
+                if select_model == 5:
+                    heatmap, coordinates, visibility, _ = predictions
+                else:
+                    heatmap, coordinates, visibility = predictions
 
                 if coordinates.shape[0] > 0:  # Check if valid landmarks are detected
                     # Rescale coordinates to the original frame dimensions
