@@ -2,7 +2,7 @@ import tensorflow as tf
 from layers import BlazeBlock, ChannelAttention, SpatialAttention
 from config import num_joints
 
-class BlazePose():
+class Base_BlazePose():
     def __init__(self, l2_reg=0):
         self.conv1 = tf.keras.layers.Conv2D(
             filters=24, kernel_size=3, strides=(2, 2), padding='same', activation='relu',
@@ -158,4 +158,4 @@ class BlazePose():
         visibility = self.conv17(x)
         result = [heatmap, coordinates, visibility]
 
-        return tf.keras.Model(inputs=input_x, outputs=result)
+        return tf.keras.Model(inputs=input_x, outputs=result,name="BaseModel")

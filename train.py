@@ -8,7 +8,7 @@ from data import coordinates, visibility, heatmap_set, data, number_images
 from deeper_base_model import Deeper_Base_BlazePose
 from CBAM_model import CBAM_BlazePose
 from EXTRA_model import EXTRA_BlazePose
-from base_model import BlazePose
+from base_model import Base_BlazePose
 from VIT_model import VIT_BlazePose
 from ViT2_model import VIT2_BlazePose
 import utils.metrics as metrics
@@ -37,7 +37,7 @@ def load_model():
         print("Using VIT2_BlazePose")
         model = VIT2_BlazePose().call()
     else:
-        model = BlazePose().call()
+        model = Base_BlazePose().call()
     assert model is not None, "Invalid model selected. Change select_model value to something that enters the if-else blocks"
     model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], metrics=[None, metrics.PCKMetric(), None])
     return model

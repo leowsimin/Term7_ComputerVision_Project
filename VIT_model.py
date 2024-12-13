@@ -242,4 +242,4 @@ class VIT_BlazePose():
         print("Visibility:", visibility.shape)
         result = [heatmap, coordinates, visibility]
 
-        return tf.keras.Model(inputs=input_x, outputs=result)
+        return tf.keras.Model(inputs=input_x, outputs=result,name="VIT_1_Model")
