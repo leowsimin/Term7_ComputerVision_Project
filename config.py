@@ -20,5 +20,5 @@ continue_train_from_filename = ""
 best_pre_train_filename = "model_ep50.weights.h5"
 
 # for test only
-epoch_to_test = 55
-use_existing_model_weights = 1
+epoch_to_test = 50
+use_existing_model_weights = 0

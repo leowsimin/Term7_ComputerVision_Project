@@ -29,7 +29,9 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 if use_existing_model_weights:
     weight_filepath = "model.weights.h5"
 else:
-    weight_filepath = os.path.join(checkpoint_path_regression, "models/model_ep{}_val_loss_{val_loss:.2f}.weights.h5".format(epoch_to_test))
+    # weight_filepath = os.path.join(checkpoint_path_regression, "models/model_ep{}_val_loss_{val_loss:.2f}.weights.h5".format(epoch_to_test))
+    weight_filepath = "checkpoints_regression/models/model_ep50.weights.h5"
+    
 
 model = BlazePose().call()
 model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], metrics=[None, metrics.PCKMetric(), None])

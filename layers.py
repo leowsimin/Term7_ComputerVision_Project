@@ -39,30 +39,25 @@ class PatchEmbedding(tf.keras.layers.Layer):
         super(PatchEmbedding, self).__init__()
         self.patch_size = patch_size
         self.embed_dim = embed_dim
-        self.projection = tf.keras.layers.Dense(embed_dim)  # Project each patch to embed_dim
+        # self.projection = tf.keras.layers.Dense(embed_dim)  # Project each patch to embed_dim
+        self.conv = tf.keras.layers.Conv2D(
+            filters=embed_dim, 
+            kernel_size=patch_size, 
+            strides=patch_size, 
+            padding="valid"
+        )
 
     def call(self, images):
-        batch_size = tf.shape(images)[0]
-        height, width, channels = images.shape[1:]  # Ignore batch size, get the dimensions of the image
+        x = self.conv(images)  # Apply convolution
+        # Output shape: [batch_size, height//patch_size, width//patch_size, embed_dim]
         
-        patch_height, patch_width = self.patch_size
-        # Extract patches (patches of shape [batch_size, num_patches_height, num_patches_width, patch_height * patch_width * channels])
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=[1, patch_height, patch_width, 1],
-            strides=[1, patch_height, patch_width, 1],
-            rates=[1, 1, 1, 1],
-            padding="VALID",
-        )
+        # Flatten spatial dimensions to create patches
+        batch_size = tf.shape(x)[0]
+        num_patches = tf.shape(x)[1] * tf.shape(x)[2]  # Height//patch_size * Width//patch_size
+        embed_dim = tf.shape(x)[3]
         
-        # Reshape patches to (batch_size, num_patches, patch_dim)
-        num_patches_height = height // patch_height
-        num_patches_width = width // patch_width
-        patch_dim = patch_height * patch_width * channels  # Flattened patch size
-        patches = tf.reshape(patches, [batch_size, num_patches_height * num_patches_width, patch_dim])
-        
-        # Project each patch to embed_dim using the Dense layer
-        return self.projection(patches)  # [batch_size, num_patches, embed_dim]
+        x = tf.reshape(x, [batch_size, num_patches, embed_dim])  # [batch_size, num_patches, embed_dim]
+        return x # [batch_size, num_patches, embed_dim]
 
 class PositionalEmbedding(tf.keras.layers.Layer):
     def __init__(self, num_patches, embed_dim):

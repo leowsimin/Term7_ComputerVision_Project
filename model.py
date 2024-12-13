@@ -26,7 +26,7 @@ class BlazePose():
         # self.downsampling_layer_2 = tf.keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))
 
         #  ---------- ViT Transformer ----------
-        self.num_transformer_layers = 6
+        self.num_transformer_layers = 12
 
         self.patch_size = (8, 8)
         self.num_patches = (64 // self.patch_size[0]) * (64 // self.patch_size[1]) #64 patches
@@ -45,10 +45,24 @@ class BlazePose():
         # self.reshaped_fn = Reshape((-1, 8, 8, 128))
 
         #THIS PORTION
+
         self.reshape_layer = tf.keras.layers.Reshape(target_shape=(-1, self.height, self.width, self.embed_dim))
-        self.conv_trans_upsampling = tf.keras.layers.UpSampling2D(size=(8, 8), interpolation="bilinear")
-        self.conv1x1 = tf.keras.layers.Conv2D(48, (1, 1), activation="relu")
-        
+        self.transpose_conv = tf.keras.layers.Conv2DTranspose(
+            filters=128,          # Number of output channels (filters)
+            kernel_size=4,       # Kernel size for upsampling
+            strides=8,           # Strides to upsample the feature map
+            padding='same',      # Padding to keep output size consistent
+        )
+
+        self.conv1x1 = tf.keras.layers.Conv2D(
+            filters=48,          # Same number of output channels as needed
+            kernel_size=1,       # 1x1 convolution for refinement
+            padding='same'
+        )
+
+        # self.reshape_layer = tf.keras.layers.Reshape(target_shape=(-1, self.height, self.width, self.embed_dim))
+        # self.conv_trans_upsampling = tf.keras.layers.UpSampling2D(size=(8, 8), interpolation="bilinear")
+        # self.conv1x1 = tf.keras.layers.Conv2D(48, (1, 1), activation="relu")
         #  ---------- Heatmap branch ----------
         # self.conv3 = BlazeBlock(block_num = 3, channel = 48)    # input res: 128
         self.conv4 = BlazeBlock(block_num = 4, channel = 96)    # input res: 64
@@ -181,7 +195,7 @@ class BlazePose():
         reshaped_patches = reshaped_patches[:, 0, :, :, :]
         print('Reshaped size:', reshaped_patches.shape)
 
-        upsampled_patches = self.conv_trans_upsampling(reshaped_patches)
+        upsampled_patches = self.transpose_conv(reshaped_patches)
         print("Upsampled Shape:", upsampled_patches)
 
         output = self.conv1x1(upsampled_patches)
