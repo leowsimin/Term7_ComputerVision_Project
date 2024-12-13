@@ -2,7 +2,7 @@
 import numpy as np
 import tensorflow as tf
 from scipy.io import loadmat
-from config import num_joints, dataset, num_images, train_split, val_split, test_split, heat_size
+from config import num_joints, dataset, num_images, train_split, val_split, test_split, heat_size, select_model
 import mlflow
 
 # guassian generation
@@ -47,11 +47,18 @@ flipped_labels = label.copy()  # Copy the original labels
 # Flip the `x` coordinates of the joints for the flipped images
 flipped_labels[:, :, 0] = 256 - flipped_labels[:, :, 0]  # Assuming the images are resized to 256x256
 
+joint_names_dict = {
+    0: "Right ankle", 1: "Right knee", 2: "Right hip", 3: "Left hip", 4: "Left knee", 5: "Left ankle", 6: "Right wrist", 7: "Right elbow", 8: "Right shoulder", 9: "Left shoulder", 10: "Left elbow", 11: "Left wrist", 12: "Neck", 13: "Head top"
+}
+negative_joint_dict = {0: 5, 1: 4, 2:3, 6: 11, 7: 10, 8: 9, 12: None, 13: None, 5: 0, 4: 1, 3: 2, 11: 6, 10: 7, 9: 8}
+
 # read images
 data = np.zeros([number_images, 256, 256, 3])
 flipped_data = np.zeros([number_images, 256, 256, 3])
 heatmap_set = np.zeros((number_images, heat_size, heat_size, num_joints), dtype=np.float32)
 flipped_heatmap_set = np.zeros((number_images, heat_size, heat_size, num_joints), dtype=np.float32)
+negative_heatmap_set = np.zeros(
+    (number_images, heat_size, heat_size, num_joints), dtype=np.float32)
 print("Reading dataset...")
 for i in range(number_images):
     if dataset == "lsp":
@@ -68,21 +75,39 @@ for i in range(number_images):
     label[i, :, 1] *= (256 / img_shape[0])
     data[i] = tf.image.resize(img, [256, 256])
     flipped_data[i] = tf.image.flip_left_right(data[i])
+    heatmaps = {}
     # generate heatmap set
     for j in range(num_joints):
         _joint = (label[i, j, 0:2] // (256 / heat_size)).astype(np.uint16)
         heatmap_set[i, :, :, j] = getGaussianMap(joint = _joint, heat_size = heat_size, sigma = 4)
         flipped_joint = (flipped_labels[i, j, 0:2] // (256 / heat_size)).astype(np.uint16)
         flipped_heatmap_set[i,:, :, j] = getGaussianMap(joint=flipped_joint, heat_size=heat_size, sigma=4)
+        
+        if select_model == 5:
+            heatmaps[j] = heatmaps.get(j, heatmap_set[i, :, :, j])
+            if negative_joint_dict[j] is not None:
+                j_neg = negative_joint_dict[j]
+                if j_neg in heatmaps:
+                    negative_heatmap = heatmaps.get(j_neg)
+                else:
+                    _negative_joint = (label[i, j_neg, 0:2] // (256 / heat_size)).astype(np.uint16)
+                    negative_heatmap = getGaussianMap(joint = _negative_joint, heat_size = heat_size, sigma = 4)
+                    heatmaps[j_neg] = negative_heatmap
+            else:
+                negative_heatmap = np.zeros((heat_size, heat_size))
+            negative_heatmap_set[i, :, :, j] = negative_heatmap
     # print status
     if not i % (number_images // 80):
         print(">", end='')
 
-label = np.concatenate([label,flipped_labels],axis=0)
-data = np.concatenate([data,flipped_data],axis=0)
-heatmap_set = np.concatenate([heatmap_set,flipped_heatmap_set],axis=0)
-number_images = label.shape[0]
-assert number_images == 4000
+if select_model == 5:
+    pass
+else:
+    label = np.concatenate([label,flipped_labels],axis=0)
+    data = np.concatenate([data,flipped_data],axis=0)
+    heatmap_set = np.concatenate([heatmap_set,flipped_heatmap_set],axis=0)
+    number_images = label.shape[0]
+    assert number_images == 4000
 
 coordinates = label[:, :, 0:2]
 visibility = label[:, :, 2:]
@@ -95,10 +120,10 @@ val_start, val_end = int(train_split * number_images), int((train_split + val_sp
 test_start, test_end = int((train_split + val_split) * number_images), number_images
 
 x_train = data[train_start:train_end]
-y_train = [heatmap_set[train_start:train_end], coordinates[train_start:train_end], visibility[train_start:train_end]]
 x_val = data[val_start:val_end]
-y_val = [heatmap_set[val_start:val_end], coordinates[val_start:val_end], visibility[val_start:val_end]]
 x_test = data[test_start:test_end]
+y_train = [heatmap_set[train_start:train_end], coordinates[train_start:train_end], visibility[train_start:train_end]]
+y_val = [heatmap_set[val_start:val_end], coordinates[val_start:val_end], visibility[val_start:val_end]]
 y_test = [heatmap_set[test_start:test_end], coordinates[test_start:test_end], visibility[test_start:test_end]]
 
 try:

@@ -1,15 +1,17 @@
 import pathlib, cv2
 import numpy as np
-from data import data, coordinates, heatmap_set, visibility
-import matplotlib.pyplot as plt
+from data import data, coordinates, heatmap_set, visibility, joint_names_dict, joint_order
+from config import select_model
 
 def draw_images(model, img_idxs: list[int]):  
     pathlib.Path("result").mkdir(parents=True, exist_ok=True)
     # GENERATE RESULT IMAGES
     filenames = []
     for t in img_idxs:
-        heatmap, preds, _ = model.predict(data[t:t+1])
-        print(heatmap.shape)
+        if select_model == 5:
+            heatmap, preds, _, _ = model.predict(data[t:t+1])
+        else:
+            heatmap, preds, _= model.predict(data[t:t+1])
         gt_skeleton = coordinates[t].astype(np.uint8)
         pred_skeleton = preds[0].astype(np.uint8)
         assert gt_skeleton.shape == pred_skeleton.shape
@@ -36,6 +38,8 @@ def draw_images(model, img_idxs: list[int]):
         filenames.append(filename)
     return filenames
 
+from matplotlib import pyplot as plt
+
 def draw_heatmaps(model, img_idxs: list[int]):  
     pathlib.Path("result").mkdir(parents=True, exist_ok=True)
     # GENERATE RESULT IMAGES
@@ -43,14 +47,17 @@ def draw_heatmaps(model, img_idxs: list[int]):
     target_size = 256  # Target size for heatmaps
     for t in img_idxs:
         fig = plt.figure(figsize=(56, 56))
-        heatmaps, _, _ = model.predict(data[t:t+1])
-        gt_skeleton = coordinates[t].astype(np.uint8)  
+        if select_model == 5:
+            heatmaps, preds, _, _ = model.predict(data[t:t+1])
+        else:
+            heatmaps, preds, _= model.predict(data[t:t+1])
         img = data[t].astype(np.uint8)
-        
         heatmaps = np.uint8(255 * heatmaps) # (1, 128, 128, 14)
-        for kp in range(heatmaps.shape[-1]):
 
+        i = 0
+        for kp in joint_order[:6]:
             heatmap = heatmaps[0, :, :, kp]
+
             if heatmap.shape[0] < target_size or heatmap.shape[1] < target_size:
                 heatmap = cv2.resize(
                     heatmap,
@@ -59,14 +66,19 @@ def draw_heatmaps(model, img_idxs: list[int]):
                 )
             colored_heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
             blended_img = cv2.addWeighted(img, 0.3, colored_heatmap, 0.7, 0) 
-            cv2.circle(blended_img, center=tuple(gt_skeleton[kp][0:2]), radius=2, color=(0, 255, 0), thickness=2)
+            # cv2.circle(blended_img, center=tuple(gt_skeleton[kp][0:2]), radius=2, color=(0, 255, 0), thickness=2)
 
-            plt.subplot(4, 4, kp+1)
+            plt.subplot(1, 6, i+1)
             plt.imshow(blended_img)
             plt.axis('off')
-            plt.title(f'keypoint {kp+1}', fontsize=40)
+            plt.title(f'{joint_names_dict[kp]}', fontsize=40)
+            
+            np.savetxt('tmp/heatmap_%d_%s.txt' % (t, joint_names_dict[kp]), heatmap, fmt='%d')
+
+            i += 1
 
         filename = "./result/lsp_%d_heatmap.png"%t
         plt.savefig(filename, bbox_inches='tight')
+
         filenames.append(filename)
     return filenames

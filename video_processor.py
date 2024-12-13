@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import time  # Import for measuring processing time
 
 from base_model import BlazePose
-from config import epoch_to_test, input_video_path, output_video_path
+from config import epoch_to_test, input_video_path, output_video_path, select_model
 
 # Set parameters
 checkpoint_path_regression = "checkpoints_regression"
@@ -60,7 +60,11 @@ while video.isOpened():
     input_frame = cv2.resize(rgb_frame, (256, 256))
     input_frame = np.expand_dims(input_frame, axis=0)
 
-    heatmap, coordinates, visibility = model.predict(input_frame)
+    if select_model == 5:
+        heatmap, coordinates, visibility, _ = model.predict(input_frame)
+
+    else:
+        heatmap, coordinates, visibility = model.predict(input_frame)
 
     if coordinates.shape[0] > 0:  # Check if valid landmarks are detected
         # Rescale coordinates to the original frame dimensions

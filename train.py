@@ -1,10 +1,11 @@
 #!~/miniconda3/envs/tf2/bin/python
 import os
 import pathlib
+from HEATMAP_model import HEATMAP_BlazePose
 import tensorflow as tf
 from config import total_epoch, train_mode, best_pre_train_filename, continue_train, batch_size, dataset, select_model
 from deeper_base_model import Deeper_Base_BlazePose
-from data import coordinates, visibility, heatmap_set, data, number_images
+from data import coordinates, visibility, heatmap_set, data, number_images, negative_heatmap_set
 from deeper_base_model import Deeper_Base_BlazePose
 from CBAM_model import CBAM_BlazePose
 from EXTRA_model import EXTRA_BlazePose
@@ -12,6 +13,7 @@ from base_model import BlazePose
 from VIT_model import VIT_BlazePose
 from ViT2_model import VIT2_BlazePose
 import utils.metrics as metrics
+from utils.losses import loss_func_bce_negative_joint
 
 checkpoint_path_heatmap = "checkpoints_heatmap"
 checkpoint_path_regression = "checkpoints_regression"
@@ -36,25 +38,43 @@ def load_model():
     elif select_model == 4:
         print("Using VIT2_BlazePose")
         model = VIT2_BlazePose().call()
+    elif select_model == 5:
+        print("Using HEATMPAP_BlazePose")
+        model = HEATMAP_BlazePose().call()
     else:
         model = BlazePose().call()
     assert model is not None, "Invalid model selected. Change select_model value to something that enters the if-else blocks"
-    model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], metrics=[None, metrics.PCKMetric(), None])
+    if select_model == 5:
+        model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce, loss_func_bce_negative_joint], metrics=[None, metrics.PCKMetric(), None, None])
+    else:
+        model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], metrics=[None, metrics.PCKMetric(), None])
     return model
 
 try:
     if dataset == "lsp":
         x_train = data[:(number_images - 400)]
-        y_train = [heatmap_set[:(number_images - 400)], coordinates[:(number_images - 400)], visibility[:(number_images - 400)]]
+        if select_model == 5:
+            y_train = [heatmap_set[:(number_images - 400)], coordinates[:(number_images - 400)], visibility[:(number_images - 400)], negative_heatmap_set[:(number_images - 400)]]            
+        else:
+            y_train = [heatmap_set[:(number_images - 400)], coordinates[:(number_images - 400)], visibility[:(number_images - 400)]]
 
         x_val = data[-400:-200]
-        y_val = [heatmap_set[-400:-200], coordinates[-400:-200], visibility[-400:-200]]
+        if select_model == 5:
+            y_val = [heatmap_set[-400:-200], coordinates[-400:-200], visibility[-400:-200], negative_heatmap_set[-400:200]]
+        else:
+            y_val = [heatmap_set[-400:-200], coordinates[-400:-200], visibility[-400:-200]]
     else:
         x_train = data[:(number_images - 2000)]
-        y_train = [heatmap_set[:(number_images - 2000)], coordinates[:(number_images - 2000)], visibility[:(number_images - 2000)]]
+        if select_model == 5:
+            y_train = [heatmap_set[:(number_images - 2000)], coordinates[:(number_images - 2000)], visibility[:(number_images - 2000)], negative_heatmap_set[:(number_images - 2000)]]
+        else:
+            y_train = [heatmap_set[:(number_images - 2000)], coordinates[:(number_images - 2000)], visibility[:(number_images - 2000)]]
 
         x_val = data[-2000:-1000]
-        y_val = [heatmap_set[-2000:-1000], coordinates[-2000:-1000], visibility[-2000:-1000]]
+        if select_model == 5:
+            y_val = [heatmap_set[-2000:-1000], coordinates[-2000:-1000], visibility[-2000:-1000], negative_heatmap_set[-2000:-1000]]
+        else:
+            y_val = [heatmap_set[-2000:-1000], coordinates[-2000:-1000], visibility[-2000:-1000]]
 except Exception as ex:
     print(ex)
 
