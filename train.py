@@ -2,15 +2,41 @@
 import os
 import pathlib
 import tensorflow as tf
-from model import BlazePose
-from config import total_epoch, train_mode, best_pre_train_filename, continue_train, batch_size, dataset
+from config import total_epoch, train_mode, best_pre_train_filename, continue_train, batch_size, dataset, select_model
+from deeper_base_model import Deeper_Base_BlazePose
 from data import coordinates, visibility, heatmap_set, data, number_images
-#import logger
+from deeper_base_model import Deeper_Base_BlazePose
+from CBAM_model import CBAM_BlazePose
+from EXTRA_model import EXTRA_BlazePose
+from base_model import BlazePose
+from VIT_model import VIT_BlazePose
+import utils.metrics as metrics
 
 checkpoint_path_heatmap = "checkpoints_heatmap"
 checkpoint_path_regression = "checkpoints_regression"
 loss_func_mse = tf.keras.losses.MeanSquaredError()
 loss_func_bce = tf.keras.losses.BinaryCrossentropy()
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+
+def load_model():
+    model = None
+    if select_model == 0:
+        print("Using Deeper_Base_BlazePose")
+        model = Deeper_Base_BlazePose().call()
+    elif select_model == 1:
+        print("Using CBAM_BlazePose")
+        model = CBAM_BlazePose().call()
+    elif select_model == 2:
+        print("Using EXTRA_BlazePose")
+        model =  EXTRA_BlazePose().call()
+    elif select_model == 3:
+        print("Using VIT_BlazePose")
+        model = VIT_BlazePose().call()
+    else:
+        model = BlazePose().call()
+    assert model is not None, "Invalid model selected. Change select_model value to something that enters the if-else blocks"
+    model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], metrics=[None, metrics.PCKMetric(), None])
+    return model
 
 try:
     if dataset == "lsp":
@@ -40,9 +66,9 @@ if gpus:
 else:
     print("No GPU found, using CPU instead.")
 
-model = BlazePose().call()
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce])
+model = load_model()
+#optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+#model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce])
 
 pathlib.Path(checkpoint_path_heatmap).mkdir(parents=True, exist_ok=True)
 pathlib.Path(checkpoint_path_regression).mkdir(parents=True, exist_ok=True)

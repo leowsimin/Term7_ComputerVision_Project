@@ -2,14 +2,19 @@ import cv2, os
 import tensorflow as tf
 from tensorflow.python.ops import math_ops, array_ops, gen_math_ops
 import numpy as np
-import pathlib
-from base_model import BlazePose
-from config import epoch_to_test, eval_mode, dataset, use_existing_model_weights, pck_metric, batch_size, img_idxs
+from config import epoch_to_test, eval_mode, dataset, use_existing_model_weights, pck_metric, batch_size, img_idxs, select_model
 from data import x_test, y_test
 from utils.draw import draw_images, draw_heatmaps
 import utils.logger as logger
-import utils.metrics as metrics
 import mlflow
+from deeper_base_model import Deeper_Base_BlazePose
+from CBAM_model import CBAM_BlazePose
+from EXTRA_model import EXTRA_BlazePose
+import utils.metrics as metrics
+
+loss_func_mse = tf.keras.losses.MeanSquaredError()
+loss_func_bce = tf.keras.losses.BinaryCrossentropy()
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
 def Eclidian2(a, b):
 # Calculate the square of Eclidian distance
@@ -19,21 +24,34 @@ def Eclidian2(a, b):
         summer += (a[i] - b[i]) ** 2
     return summer
 
+
+def load_model():
+    model = None
+    weight_filepath = ""
+    if select_model == 0:
+        model = Deeper_Base_BlazePose().call()
+        weight_filepath = "model.weights.h5"
+    elif select_model == 1:
+        model = CBAM_BlazePose().call()
+        weight_filepath = "CBAM_best_model.weights.h5"
+    elif select_model == 2:
+        model =  EXTRA_BlazePose().call()
+        weight_filepath = "EXTRA_best_model.weights.h5"
+    assert model is not None, "Invalid model selected. Change select_model value to something that enters the if-else blocks"
+    model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], metrics=[None, metrics.PCKMetric(), None])
+    print("Load regression weights", weight_filepath)
+    model.load_weights(weight_filepath)
+    return model
+
 checkpoint_path_regression = "checkpoints_regression"
-loss_func_mse = tf.keras.losses.MeanSquaredError()
-loss_func_bce = tf.keras.losses.BinaryCrossentropy()
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+
 
 if use_existing_model_weights:
     weight_filepath = "model.weights.h5"
 else:
     weight_filepath = os.path.join(checkpoint_path_regression, "models/model_ep{}_val_loss_{val_loss:.2f}.weights.h5".format(epoch_to_test))
 
-model = BlazePose().call()
-model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], metrics=[None, metrics.PCKMetric(), None])
-
-print("Load regression weights", weight_filepath)
-model.load_weights(weight_filepath)
+model = load_model()
 
 res = model.evaluate(x=x_test, y=y_test, batch_size=batch_size, callbacks=[logger.keras_custom_callback])       
 print("Test PCK score:", res[-1])

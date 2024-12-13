@@ -138,10 +138,10 @@ class BlazePose():
         heatmap = tf.keras.activations.sigmoid(self.conv11(y))
 
         # Stop gradient for regression
-        x = tf.keras.ops.stop_gradient(x)
-        y2 = tf.keras.ops.stop_gradient(y2)
-        y3 = tf.keras.ops.stop_gradient(y3)
-        y4 = tf.keras.ops.stop_gradient(y4)
+        x = tf.keras.layers.Lambda(lambda t: tf.stop_gradient(t))(x)
+        y2 = tf.keras.layers.Lambda(lambda t: tf.stop_gradient(t))(y2)
+        y3 = tf.keras.layers.Lambda(lambda t: tf.stop_gradient(t))(y3)
+        y4 = tf.keras.layers.Lambda(lambda t: tf.stop_gradient(t))(y4)
 
         # ---------- regression branch ----------
         x = self.conv12a(x) + self.conv12b(y2)

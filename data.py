@@ -49,9 +49,9 @@ flipped_labels[:, :, 0] = 256 - flipped_labels[:, :, 0]  # Assuming the images a
 
 # read images
 data = np.zeros([number_images, 256, 256, 3])
-flipped_data = np.zeros([number_images, 256, 256, 3])
+#flipped_data = np.zeros([number_images, 256, 256, 3])
 heatmap_set = np.zeros((number_images, heat_size, heat_size, num_joints), dtype=np.float32)
-flipped_heatmap_set = np.zeros((number_images, heat_size, heat_size, num_joints), dtype=np.float32)
+#flipped_heatmap_set = np.zeros((number_images, heat_size, heat_size, num_joints), dtype=np.float32)
 print("Reading dataset...")
 for i in range(number_images):
     if dataset == "lsp":
@@ -67,21 +67,21 @@ for i in range(number_images):
     label[i, :, 0] *= (256 / img_shape[1])
     label[i, :, 1] *= (256 / img_shape[0])
     data[i] = tf.image.resize(img, [256, 256])
-    flipped_data[i] = tf.image.flip_left_right(data[i])
+    #flipped_data[i] = tf.image.flip_left_right(data[i])
     # generate heatmap set
     for j in range(num_joints):
         _joint = (label[i, j, 0:2] // (256 / heat_size)).astype(np.uint16)
         heatmap_set[i, :, :, j] = getGaussianMap(joint = _joint, heat_size = heat_size, sigma = 4)
         flipped_joint = (flipped_labels[i, j, 0:2] // (256 / heat_size)).astype(np.uint16)
-        flipped_heatmap_set[i,:, :, j] = getGaussianMap(joint=flipped_joint, heat_size=heat_size, sigma=4)
+        #flipped_heatmap_set[i,:, :, j] = getGaussianMap(joint=flipped_joint, heat_size=heat_size, sigma=4)
     # print status
     if not i % (number_images // 80):
         print(">", end='')
 
-label = np.concatenate([label,flipped_labels],axis=0)
-data = np.concatenate([data,flipped_data],axis=0)
-heatmap_set = np.concatenate([heatmap_set,flipped_heatmap_set],axis=0)
-number_images = label.shape[0]
+#label = np.concatenate([label,flipped_labels],axis=0)
+#data = np.concatenate([data,flipped_data],axis=0)
+#heatmap_set = np.concatenate([heatmap_set,flipped_heatmap_set],axis=0)
+#number_images = label.shape[0]
 
 coordinates = label[:, :, 0:2]
 visibility = label[:, :, 2:]

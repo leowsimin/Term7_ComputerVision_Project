@@ -109,3 +109,124 @@ class SpatialAttention(tf.keras.layers.Layer):
 
         # Apply attention
         return multiply([input_feature, cbam_feature])
+
+class CBAM(tf.keras.layers.Layer): 
+    def __init__(self, reduction_ratio=16): 
+        super(CBAM, self).__init__() 
+        self.reduction_ratio = reduction_ratio 
+ 
+    def build(self, input_shape): 
+        # Channel attention 
+        self.global_avg_pool = GlobalAveragePooling2D() 
+        self.global_max_pool = GlobalMaxPooling2D() 
+        self.shared_dense1 = Dense( 
+            input_shape[-1] // self.reduction_ratio, activation="relu" 
+        ) 
+        self.shared_dense2 = Dense(input_shape[-1], activation="sigmoid") 
+ 
+        # Spatial attention 
+        self.conv_spatial = Conv2D( 
+            1, kernel_size=7, strides=1, padding="same", activation="sigmoid" 
+        ) 
+ 
+    def call(self, inputs): 
+        # Channel attention 
+        avg_out = self.shared_dense2(self.shared_dense1(self.global_avg_pool(inputs))) 
+        max_out = self.shared_dense2(self.shared_dense1(self.global_max_pool(inputs))) 
+        channel_attention = multiply([inputs, avg_out + max_out]) 
+ 
+        # Spatial attention 
+        avg_pool = tf.reduce_mean(channel_attention, axis=-1, keepdims=True) 
+        max_pool = tf.reduce_max(channel_attention, axis=-1, keepdims=True) 
+        spatial_attention = self.conv_spatial(tf.concat([avg_pool, max_pool], axis=-1)) 
+ 
+        return multiply([channel_attention, spatial_attention])
+    
+
+class PatchEmbedding(tf.keras.layers.Layer):
+    def __init__(self, patch_size, embed_dim):
+        super(PatchEmbedding, self).__init__()
+        self.patch_size = patch_size
+        self.embed_dim = embed_dim
+        self.projection = tf.keras.layers.Dense(embed_dim)  # Project each patch to embed_dim
+
+    def call(self, images):
+        batch_size = tf.shape(images)[0]
+        height, width, channels = images.shape[1:]  # Ignore batch size, get the dimensions of the image
+        
+        patch_height, patch_width = self.patch_size
+        # Extract patches (patches of shape [batch_size, num_patches_height, num_patches_width, patch_height * patch_width * channels])
+        patches = tf.image.extract_patches(
+            images=images,
+            sizes=[1, patch_height, patch_width, 1],
+            strides=[1, patch_height, patch_width, 1],
+            rates=[1, 1, 1, 1],
+            padding="VALID",
+        )
+        
+        # Reshape patches to (batch_size, num_patches, patch_dim)
+        num_patches_height = height // patch_height
+        num_patches_width = width // patch_width
+        patch_dim = patch_height * patch_width * channels  # Flattened patch size
+        patches = tf.reshape(patches, [batch_size, num_patches_height * num_patches_width, patch_dim])
+        
+        # Project each patch to embed_dim using the Dense layer
+        return self.projection(patches)  # [batch_size, num_patches, embed_dim]
+
+class PositionalEmbedding(tf.keras.layers.Layer):
+    def __init__(self, num_patches, embed_dim):
+        super(PositionalEmbedding, self).__init__()
+        self.positional_embedding = self.add_weight(
+            shape=(1, num_patches, embed_dim),
+            initializer="random_normal",
+            trainable=True,
+        )
+
+    def call(self, patch_embeddings):
+        return patch_embeddings + self.positional_embedding
+
+class MultiHeadSelfAttention(tf.keras.layers.Layer):
+    def __init__(self, embed_dim, num_heads):
+        super(MultiHeadSelfAttention, self).__init__()
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.attention = tf.keras.layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
+
+    def call(self, inputs):
+        return self.attention(inputs, inputs)  # Self-attention
+
+class MLPBlock(tf.keras.layers.Layer):
+    def __init__(self, embed_dim, hidden_dim):
+        super(MLPBlock, self).__init__()
+        self.dense1 = tf.keras.layers.Dense(hidden_dim, activation="gelu")
+        self.dense2 = tf.keras.layers.Dense(embed_dim)
+
+    def call(self, inputs):
+        x = self.dense1(inputs)
+        return self.dense2(x)
+
+class TransformerBlock(tf.keras.layers.Layer):
+    def __init__(self, embed_dim, num_heads, mlp_hidden_dim):
+        super(TransformerBlock, self).__init__()
+        self.norm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
+        self.norm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
+        self.attention = MultiHeadSelfAttention(embed_dim, num_heads)
+        self.mlp = MLPBlock(embed_dim, mlp_hidden_dim)
+
+    def call(self, inputs):
+        # Apply attention with residual connection
+        attn_output = self.attention(self.norm1(inputs))
+        x = inputs + attn_output
+
+        # Apply MLP with residual connection
+        mlp_output = self.mlp(self.norm2(x))
+        return x + mlp_output ## NOTE the output size: (np, D)
+    
+class MyLayer(tf.keras.layers.Layer):
+    def __init__(self):
+        super(MyLayer, self).__init__()
+
+    def call(self, x):
+        # Example operation (replace this with your actual operation)
+        # Ensuring that x is correctly processed as a Keras tensor
+        return tf.reshape(x, (-1, 64, 64, 24))  # Example reshaping

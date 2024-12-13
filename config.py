@@ -26,3 +26,10 @@ use_existing_model_weights = True
 # for video processing
 input_video_path = "test_video_1.mp4"
 output_video_path = "./output_video.mp4"
+
+# for model selection
+select_model = 100
+
+
+
+
