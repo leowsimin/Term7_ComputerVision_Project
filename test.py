@@ -13,7 +13,10 @@ from EXTRA_model import EXTRA_BlazePose
 from base_model import Base_BlazePose
 from VIT_model import VIT_BlazePose
 from ViT2_model import VIT2_BlazePose
+from HEATMAP_model import HEATMAP_BlazePose
 import utils.metrics as metrics
+from utils.losses import loss_func_bce_negative_joint
+
 
 assert tf.__version__ == "2.18.0", f"Wrong tensorflow version being used. Expected 2.18.0, Received {tf.__version__}"
 
@@ -24,7 +27,7 @@ x_train, y_train, x_val, y_val, x_test, y_test = None,None,None,None,None,None
 if select_model == 3 or select_model == 4:
     x_train, y_train, x_val, y_val, x_test, y_test = prepare_datasets(heat_size=64)
 else:
-    x_train, y_train, x_val, y_val, x_test, y_test = prepare_datasets()
+    x_train, y_train, x_val, y_val, x_test, y_test = prepare_datasets(heatmap_model_selected=select_model==5)
 def load_model():
     model = None
     weight_filepath = ""
@@ -47,14 +50,22 @@ def load_model():
         print("Using VIT2_BlazePose")
         weight_filepath = "VIT2_model.weights.h5"
         model = VIT2_BlazePose().call()
+    elif select_model == 5:
+        print("Using HEATMAP_BlazePose")
+        weight_filepath = "HEATMAP_best_model.weights.h5"
+        model = HEATMAP_BlazePose().call()
     else:
         weight_filepath = "base_model.weights.h5"
         model = Base_BlazePose().call()
     assert model is not None, "Invalid model selected. Change select_model value to something that enters the if-else blocks"
-    model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], metrics=[None, metrics.PCKMetric(), None])
+    if select_model == 5:
+        model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce, loss_func_bce_negative_joint], metrics=[None, metrics.PCKMetric(), None, None])
+    else:
+        model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], metrics=[None, metrics.PCKMetric(), None])
     print("Load regression weights", weight_filepath)
     model.load_weights(weight_filepath)
     return model
+
 
 
 model = load_model()

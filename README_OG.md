@@ -47,7 +47,7 @@ Head top
   run `python train.py`.
 
 ## Test
-1. Set `epoch_to_test` to the epoch you would like to test in config.py.
+1. Set `select_model` to the model you would like to test in config.py.
 
 2. Run `python test.py`.
 
@@ -61,12 +61,14 @@ Base Model PCK: 0.58
 Extra Model PCK: 0.39
 CBAM Model PCK: 0.021
 VIT Model PCK: 0.42
+Heatmap Model PCK: 0.44
 
 ### Latency Performance (ms)
-Base Model PCK: 116
-Extra Model PCK: 290
-CBAM Model PCK: 124
-VIT Model PCK: 117
+Base Model Latency: 116
+Extra Model Latency: 290
+CBAM Model Latency: 124
+VIT Model Latency: 117
+Heatmap Model Latency: 93
 
 
 ## Reference

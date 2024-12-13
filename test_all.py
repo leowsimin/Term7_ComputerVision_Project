@@ -3,8 +3,10 @@ from base_model import Base_BlazePose
 from VIT_model import VIT_BlazePose
 from CBAM_model import CBAM_BlazePose
 from EXTRA_model import EXTRA_BlazePose
+from HEATMAP_model import HEATMAP_BlazePose
 import tensorflow as tf
 import utils.metrics as metrics
+from utils.losses import loss_func_bce_negative_joint
 from config import input_video_path, output_video_path, batch_size
 from data import prepare_datasets
 import utils.logger as logger
@@ -54,7 +56,15 @@ vit_model.load_weights("VIT_model.weights.h5")
 res = vit_model.evaluate(x=x_test, y=y_test, batch_size=batch_size) 
 print(f"{vit_model.name}: {res[-1]}")
 
-models = [base_model,vit_model,cbam_model,extra_model]
+x_train, y_train, x_val, y_val, x_test, y_test = prepare_datasets(heatmap_model_selected=True)
+
+heatmap_model = HEATMAP_BlazePose().call()
+heatmap_model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce, loss_func_bce_negative_joint], metrics=[None, metrics.PCKMetric(), None, None])
+heatmap_model.load_weights("HEATMAP_best_model.weights.h5")
+res = heatmap_model.evaluate(x=x_test, y=y_test, batch_size=batch_size) 
+print(f"{heatmap_model.name}: {res[-1]}")
+
+models = [base_model,vit_model,cbam_model,extra_model,heatmap_model]
 
 print("Latency scores: ")
 for model in models:

@@ -11,6 +11,8 @@ from EXTRA_model import EXTRA_BlazePose
 from base_model import Base_BlazePose
 from VIT_model import VIT_BlazePose
 from ViT2_model import VIT2_BlazePose
+from HEATMAP_model import HEATMAP_BlazePose
+from utils.losses import loss_func_bce_negative_joint
 import utils.metrics as metrics
 
 checkpoint_path_heatmap = "checkpoints_heatmap"
@@ -36,10 +38,16 @@ def load_model():
     elif select_model == 4:
         print("Using VIT2_BlazePose")
         model = VIT2_BlazePose().call()
+    elif select_model == 5:
+        print("Using Heatmap model")
+        model = HEATMAP_BlazePose().call()
     else:
         model = Base_BlazePose().call()
     assert model is not None, "Invalid model selected. Change select_model value to something that enters the if-else blocks"
-    model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], metrics=[None, metrics.PCKMetric(), None])
+    if select_model == 5:
+        model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce, loss_func_bce_negative_joint], metrics=[None, metrics.PCKMetric(), None, None])
+    else:
+        model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], metrics=[None, metrics.PCKMetric(), None])
     return model
 
 try:
