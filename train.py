@@ -10,6 +10,7 @@ from CBAM_model import CBAM_BlazePose
 from EXTRA_model import EXTRA_BlazePose
 from base_model import BlazePose
 from VIT_model import VIT_BlazePose
+from ViT2_model import VIT2_BlazePose
 import utils.metrics as metrics
 
 checkpoint_path_heatmap = "checkpoints_heatmap"
@@ -32,6 +33,9 @@ def load_model():
     elif select_model == 3:
         print("Using VIT_BlazePose")
         model = VIT_BlazePose().call()
+    elif select_model == 4:
+        print("Using VIT2_BlazePose")
+        model = VIT2_BlazePose().call()
     else:
         model = BlazePose().call()
     assert model is not None, "Invalid model selected. Change select_model value to something that enters the if-else blocks"

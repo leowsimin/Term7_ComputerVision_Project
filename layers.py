@@ -4,7 +4,7 @@ from tensorflow.python.keras import backend as K
 
 
 class BlazeBlock(tf.keras.Model):
-    def __init__(self, block_num = 3, channel = 48, channel_padding = 1, name_prefix=""):
+    def __init__(self, block_num = 3, channel = 48, channel_padding = 1, name_prefix="",l2_reg=0):
         super(BlazeBlock, self).__init__()
         # <----- downsample ----->
         self.downsample_a = tf.keras.models.Sequential([

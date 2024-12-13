@@ -51,10 +51,13 @@ Head top
 
 2. Run `python test.py`.
 
-## Performance Comparison
+## Test Performance Comparison
 
 Base Model PCK: 0.58
-ViT Model PCK: 
+Extra Model PCK: 0.39
+CBAM Model PCK: 0.021
+VIT Model PCK: 
+VIT 2 Model PCK: 
 
 
 ## Reference
