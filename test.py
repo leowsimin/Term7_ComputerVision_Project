@@ -31,10 +31,7 @@ else:
 def load_model():
     model = None
     weight_filepath = ""
-    if select_model == 0:
-        model = Deeper_Base_BlazePose().call()
-        weight_filepath = "model.weights.h5"
-    elif select_model == 1:
+    if select_model == 1:
         print("Using CBAM_BlazePose")
         model = CBAM_BlazePose().call()
         weight_filepath = "CBAM_best_model.weights.h5"

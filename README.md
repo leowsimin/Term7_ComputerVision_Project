@@ -34,3 +34,44 @@ In `config.py`, modify `use_existing_model_weights = 0`. Then refer to `README_O
 ### Video processing from trained model
 After training the model, in `config.py` modify the `input_video_path` and `output_video_path` parameters.
 Run `video_processor.py` 
+
+## Train
+1. Pre-train the heatmap branch and the regression branch.
+  run `python train.py`.
+
+## Test
+1. Set `select_model` to the model you would like to test in config.py.
+
+2. Run `python test.py`.
+
+## Test All
+Running `python test_all.py` will load all the models and display PCK results as well as the latency results
+
+## Test Performance Comparison
+
+### PCK Performance
+Base Model PCK: 0.58
+Extra Model PCK: 0.39
+CBAM Model PCK: 0.021
+VIT Model PCK: 0.42
+Heatmap Model PCK: 0.44
+
+### Latency Performance (ms)
+Base Model Latency: 116
+Extra Model Latency: 290
+CBAM Model Latency: 124
+VIT Model Latency: 117
+Heatmap Model Latency: 93
+
+
+## Reference
+
+```tex
+@article{Bazarevsky2020BlazePoseOR,
+  title={BlazePose: On-device Real-time Body Pose tracking},
+  author={Valentin Bazarevsky and I. Grishchenko and K. Raveendran and Tyler Lixuan Zhu and Fangfang Zhang and M. Grundmann},
+  journal={ArXiv},
+  year={2020},
+  volume={abs/2006.10204}
+}
+```

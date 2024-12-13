@@ -13,6 +13,12 @@ joint_names_dict = {
 }
 negative_joint_dict = {0: 5, 1: 4, 2:3, 6: 11, 7: 10, 8: 9, 12: None, 13: None, 5: 0, 4: 1, 3: 2, 11: 6, 10: 7, 9: 8}
 
+coordinates = None
+visibility = None
+heatmap_set = None
+data = None 
+number_images = num_images
+
 def prepare_datasets(heat_size=128,heatmap_model_selected=False):
     def getGaussianMap(joint=(16, 16), heat_size=128, sigma=2):
         heatmap = np.zeros((heat_size, heat_size), dtype=np.float32)

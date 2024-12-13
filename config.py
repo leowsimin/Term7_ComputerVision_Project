@@ -28,7 +28,7 @@ input_video_path = "squat_1.mp4"
 output_video_path = "output_video.mp4"
 
 # for model selection
-select_model = 5
+select_model = 0
 
 
 

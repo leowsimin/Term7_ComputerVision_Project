@@ -4,7 +4,7 @@ import pathlib
 import tensorflow as tf
 from config import total_epoch, train_mode, best_pre_train_filename, continue_train, batch_size, dataset, select_model
 from deeper_base_model import Deeper_Base_BlazePose
-from data import coordinates, visibility, heatmap_set, data, number_images
+from data import coordinates, visibility, heatmap_set, data, number_images, prepare_datasets
 from deeper_base_model import Deeper_Base_BlazePose
 from CBAM_model import CBAM_BlazePose
 from EXTRA_model import EXTRA_BlazePose
@@ -20,13 +20,14 @@ checkpoint_path_regression = "checkpoints_regression"
 loss_func_mse = tf.keras.losses.MeanSquaredError()
 loss_func_bce = tf.keras.losses.BinaryCrossentropy()
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-
+x_train, y_train, x_val, y_val, x_test, y_test = None,None,None,None,None,None
+if select_model == 3 or select_model == 4:
+    x_train, y_train, x_val, y_val, x_test, y_test = prepare_datasets(heat_size=64)
+else:
+    x_train, y_train, x_val, y_val, x_test, y_test = prepare_datasets(heatmap_model_selected=select_model==5)
 def load_model():
     model = None
-    if select_model == 0:
-        print("Using Deeper_Base_BlazePose")
-        model = Deeper_Base_BlazePose().call()
-    elif select_model == 1:
+    if select_model == 1:
         print("Using CBAM_BlazePose")
         model = CBAM_BlazePose().call()
     elif select_model == 2:
