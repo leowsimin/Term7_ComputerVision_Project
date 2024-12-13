@@ -45,6 +45,7 @@ def load_model():
         weight_filepath = "VIT2_model.weights.h5"
         model = VIT2_BlazePose().call()
     else:
+        weight_filepath = "base_model.weights.h5"
         model = BlazePose().call()
     assert model is not None, "Invalid model selected. Change select_model value to something that enters the if-else blocks"
     model.compile(optimizer, loss=[loss_func_bce, loss_func_mse, loss_func_bce], metrics=[None, metrics.PCKMetric(), None])

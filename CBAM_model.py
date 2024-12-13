@@ -1,9 +1,11 @@
 import tensorflow as tf
 from layers import (
     BlazeBlock,
+    # PatchEmbedding,
+    # PositionalEmbedding,
+    # TransformerBlock,
     CBAM,
 )
-
 from config import num_joints
 from tensorflow.python.keras import backend as K
 
@@ -395,7 +397,7 @@ class CBAM_BlazePose:
         y_intermediate = self.conv11(y)
         ycbam = self.cbam11(y_intermediate)
 
-        heatmap = tf.keras.activations.sigmoid(y_intermediate)
+        heatmap = tf.keras.activations.sigmoid(ycbam)
         print(f"Heatmap layer shape: {heatmap.shape}")
         # Stop gradient for regression
         x = tf.keras.ops.stop_gradient(x)
