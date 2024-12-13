@@ -25,7 +25,7 @@ class PCKMetric(tf.keras.metrics.Metric):
         )
 
     def update_state(self, y_true, y_pred, sample_weight=None):
-        y_true = math_ops.cast(y_true[:, :, :2], tf.float32)  # Ground truth keypoints
+        y_true = math_ops.cast(y_true,tf.float32)  # Ground truth keypoints
         y_pred = math_ops.cast(y_pred, tf.float32)            # Predicted keypoints
 
         head_length = Eclidian2(y_true[:, 12], y_true[:, 13])  # Shape: (batch_size,)

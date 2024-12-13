@@ -17,8 +17,18 @@ img_idxs=[1800, 1906, 1981, 1995] # which images to draw when predicting
 
 continue_train = 0
 continue_train_from_filename = "model_ep20.weights.h5"
-best_pre_train_filename = ""
+best_pre_train_filename = 50
 
 # for test only
 epoch_to_test = 55
-use_existing_model_weights = 1
+use_existing_model_weights = True
+
+# for video processing
+input_video_path = "squat_1.mp4"
+output_video_path = "output_video.mp4"
+
+# for model selection
+select_model = 0
+
+
+
