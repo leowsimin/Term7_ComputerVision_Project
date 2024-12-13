@@ -14,7 +14,7 @@ The following link is the blazepose research paper:  https://arxiv.org/abs/2006.
 
 ## Implementation
 
-This is a third-party implementation of BlazePose in Tensorflow from [alishsuper/BlazePose-Implementation](https://github.com/alishsuper/BlazePose-Implementation?tab=readme-ov-file). 
+This is an experimental adaptation of BlazePose in Tensorflow from [alishsuper/BlazePose-Implementation](https://github.com/alishsuper/BlazePose-Implementation?tab=readme-ov-file). 
 
 ### Setup
 
@@ -30,6 +30,7 @@ This is a third-party implementation of BlazePose in Tensorflow from [alishsuper
 ### Train/finetune model
 
 In `config.py`, modify `use_existing_model_weights = 0`. Then refer to `README_OG.md`.
+
 
 ### Video processing from trained model
 After training the model, in `config.py` modify the `input_video_path` and `output_video_path` parameters.
@@ -75,3 +76,4 @@ Heatmap Model Latency: 93
   volume={abs/2006.10204}
 }
 ```
+
