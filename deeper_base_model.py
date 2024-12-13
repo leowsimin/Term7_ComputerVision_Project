@@ -177,4 +177,4 @@ class Deeper_Base_BlazePose():
         visibility = self.conv17(x)
         result = [heatmap, coordinates, visibility]
 
-        return tf.keras.Model(inputs=input_x, outputs=result)
+        return tf.keras.Model(inputs=input_x, outputs=result,name="DeeperBaseModel")

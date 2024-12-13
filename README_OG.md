@@ -51,13 +51,22 @@ Head top
 
 2. Run `python test.py`.
 
+## Test All
+Running `python test_all.py` will load all the models and display PCK results as well as the latency results
+
 ## Test Performance Comparison
 
+### PCK Performance
 Base Model PCK: 0.58
 Extra Model PCK: 0.39
 CBAM Model PCK: 0.021
-VIT Model PCK: 
-VIT 2 Model PCK: 
+VIT Model PCK: 0.42
+
+### Latency Performance (ms)
+Base Model PCK: 116
+Extra Model PCK: 290
+CBAM Model PCK: 124
+VIT Model PCK: 117
 
 
 ## Reference

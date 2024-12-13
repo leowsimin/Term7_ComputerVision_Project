@@ -188,4 +188,4 @@ class EXTRA_BlazePose():
         visibility = self.conv17(x)
         result = [heatmap, coordinates, visibility]
 
-        return tf.keras.Model(inputs=input_x, outputs=result)
+        return tf.keras.Model(inputs=input_x, outputs=result,name="Extra_Model")
