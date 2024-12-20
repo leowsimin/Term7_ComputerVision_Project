@@ -1,6 +1,4 @@
-# BlazePose Experimentation
-
-This was a final project in the course 50.035 Computer Vision, Singapore University of Technology and Design. This project had four contributors - Sarang, Vy Dinh, Rachel Leow and myself (Ryan Wang). My main contributions include adapting the original blazepose model, experimenting with extra layers, and experimenting with CBAM modules.
+# Term 7 Computer Vision Final Project
 
 Theme: Design Track - healthcare
 
